@@ -10,11 +10,10 @@ const messageSchema = new mongoose.Schema({
         type: String,
         required: true,
         trim: true,
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now,
     }
+}, { 
+    // 加上這行，Mongoose 會自動幫你產生 createdAt 和 updatedAt
+    timestamps: true
 });
 
 module.exports = mongoose.model('Message', messageSchema);

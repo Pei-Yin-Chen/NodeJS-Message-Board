@@ -3,15 +3,40 @@ const router = express.Router(); // 建立一個路由器實例
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User'); // 引入 User 模型
+const protect = require('../middleware/auth')
+
+router.get('/me', protect, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.userId).select('-password'); // 查詢結果排除 password 欄位
+
+        if (!user) {
+            return res.status(404).json({ message: '找不到使用者' })
+        }
+
+        res.json({
+            user: {
+              id: user._id,
+              username: user.username,
+              email: user.email
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ message: '獲取使用者資料失敗' });
+    }
+})
 
 router.post('/register', async (req, res) => {
     try {
-        const { username, password } = req.body;
+        const { email, username, password } = req.body;
 
-        // 檢查使用者是否已經存在
-        let user = await User.findOne({ username });
+        if (!email || !username || !password) {
+            return res.status(400).json({ message: '所有欄位皆為必填' });
+        }
+
+        // 檢查 email 是否已經存在
+        let user = await User.findOne({ email });
         if (user) {
-            return res.status(400).json({ message: '使用者已經存在' });
+            return res.status(400).json({ message: '該 Email 已被註冊' });
         }
 
         // 密碼加密 (Hash)
@@ -20,6 +45,7 @@ router.post('/register', async (req, res) => {
 
         // 建立並儲存使用者
         user = new User({
+            email,
             username,
             password: hashedPassword,
         });
@@ -28,16 +54,25 @@ router.post('/register', async (req, res) => {
 
         res.status(201).json({ message: '註冊成功' });
     } catch (error) {
+        if (error.name === 'ValidationError') {
+            const message = Object.values(error.errors).map(val => val.message)[0];
+            return res.status(400).json({ message });
+        }
+
+        if (error.code === 11000) {
+            return res.status(400).json({ message: '該 Email 已被註冊' });
+        }
+
         res.status(500).json({ message: '伺服器錯誤', error: error.message });
     }
 });
 
 router.post('/login', async (req, res) => {
     try {
-        const { username, password } = req.body;
+        const { email, password } = req.body;
 
         // 檢查使用者是否存在
-        const user = await User.findOne({ username });
+        const user = await User.findOne({ email });
         if (!user) {
             return res.status(400).json({ message: '帳號或密碼錯誤' });
         }
@@ -55,16 +90,28 @@ router.post('/login', async (req, res) => {
             { expiresIn: '1h' }
         );
 
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 3600000
+        });
+
         res.json({
-            token,
             user: {
                 id: user._id,
                 username: user.username,
+                email: user.email
             }
         });
     } catch (error) {
-        res.status(500).json({ message: '伺服器錯誤', error: error.message });
+        res.status(500).json({ message: '登入程序出錯', error: error.message });
     }
+});
+
+router.post('/logout', (req, res) => {
+    res.clearCookie('token');
+    res.json({ message: '登出成功' });
 });
 
 module.exports = router; // 導出路由器實例

@@ -3,7 +3,7 @@ const router = express.Router();
 const auth = require('../middleware/auth');
 const Message = require('../models/Message');
 
-router.get('/', auth, async (req, res) => {
+router.get('/', async (req, res) => {
     try {
         const messages = await Message.find()
             .populate('user', ['username'])
@@ -24,12 +24,13 @@ router.post('/', auth, async (req, res) => {
         }
 
         const newMessage = new Message({
-            user: req.userId, // 這是從 auth middleware 存入 req 的資料
+            user: req.user.userId, // 這是從 auth middleware 存入 req 的資料
             content
         });
 
         const message = await newMessage.save();
-        res.json(message);
+        const populatedMessage = await message.populate('user', 'username');
+        res.json(populatedMessage);
     } catch (error) {
         res.status(500).json({ message: '伺服器錯誤' });
     }
@@ -50,16 +51,16 @@ router.put('/:messageId', auth, async (req, res) => {
         }
 
         // 權限檢查：只能修改自己的留言
-        if (message.user.toString() !== req.userId) {
+        if (message.user.toString() !== req.user.userId) {
             return res.status(401).json({ message: '權限不足' });
         }
 
         // 使用 findByIdAndUpdate 可以直接回傳更新後的資料
         message = await Message.findByIdAndUpdate(
-            req.params.id,
+            req.params.messageId,
             { $set: { content: content } },
             { new: true } // 這個參數代表回傳「更新後」的結果，而不是舊的
-        )
+        ).populate('user', 'username');
 
         res.json(message);
     } catch (err) {
@@ -79,8 +80,8 @@ router.delete('/:messageId', auth, async (req, res) => {
         }
 
         // 權限檢查：比對「留言的作者 ID」是否等於「目前登入的使用者 ID」
-        // 注意：message.user 是 ObjectId 物件，req.userId 是字串，所以要轉成字串比對
-        if (message.user.toString() !== req.userId) {
+        // 注意：message.user 是 ObjectId 物件，req.user.user.userId 是字串，所以要轉成字串比對
+        if (message.user.toString() !== req.user.userId) {
             return res.status(401).json({ message: '權限不足，只能刪除自己的留言' });
         }
 

@@ -1,8 +1,8 @@
 const jwt = require('jsonwebtoken');
 
 module.exports = function(req, res, next) {
-    // 從 Header 取得 Token (通常放在 Authorization 欄位)
-    const token = req.header('Authorization')?.split(' ')[1]; // 格式通常是 "Bearer <token>"
+    // 從 Cookie 中取得 Token
+    const token = req.cookies.token;
 
     // 檢查是否有 Token
     if (!token) {
@@ -14,7 +14,7 @@ module.exports = function(req, res, next) {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
         // 將使用者 ID 儲存在 req.userId 中，以便在路由中使用
-        req.userId = decoded.userId;
+        req.user = decoded;
 
         next();
     } catch (error) {
