@@ -7,6 +7,7 @@ import {
   IconButton,
   Container,
 } from '@mui/material'
+import HomeIcon from '@mui/icons-material/Home'
 import LogoutIcon from '@mui/icons-material/Logout'
 import AccountCircle from '@mui/icons-material/AccountCircle'
 import { useNavigate } from 'react-router-dom'
@@ -31,18 +32,31 @@ const Navbar = () => {
       <Container maxWidth="lg">
         <Toolbar disableGutters>
           {/* 左側區域 */}
-          <Typography
-            variant="h6"
-            component="div"
+          <Box
+            onClick={() => navigate('/')}
             sx={{
-              flexGrow: 1,
-              fontWeight: 'bold',
-              color: 'primary.main',
-              textAlign: 'left',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1, // 圖示跟文字之間的間距
+              cursor: 'pointer',
+              '&:hover': { opacity: 0.8 },
             }}
           >
-            {user ? `Hi, ${user.username}` : '歡迎參觀'}
-          </Typography>
+            <IconButton color="primary" sx={{ p: 0 }}>
+              <HomeIcon />
+            </IconButton>
+            <Typography
+              variant="h6"
+              component="div"
+              sx={{
+                fontWeight: 'bold',
+                color: 'primary.main',
+                textAlign: 'left',
+              }}
+            >
+              {user ? `Hi, ${user.username}` : '我的留言板'}
+            </Typography>
+          </Box>
 
           <Box sx={{ flexGrow: 1 }} />
 

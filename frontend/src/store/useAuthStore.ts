@@ -5,12 +5,13 @@ interface IUser {
   id: string
   username: string
   email: string
+  createdAt?: string
 }
 
 interface IAuthState {
   user: IUser | null
   isInitialized: boolean
-  setUser: (user: IUser | null) => void
+  checkAuth: () => Promise<void>
   registerAction: (userData: any) => Promise<{ success: boolean; error?: any }>
   loginAction: (credentials: any) => Promise<{ success: boolean; error?: any }>
   logout: () => Promise<void>
@@ -19,6 +20,21 @@ interface IAuthState {
 export const useAuthStore = create<IAuthState>((set) => ({
   user: null, // 初始值為 null，等 App 啟動後去打 API 拿最新的
   isInitialized: false,
+
+  checkAuth: async () => {
+    try {
+      const res = await api.get('/auth/me')
+      set({
+        user: res.data.user,
+        isInitialized: true,
+      })
+    } catch (err) {
+      set({
+        user: null,
+        isInitialized: true,
+      })
+    }
+  },
 
   registerAction: async (userData) => {
     try {
@@ -47,12 +63,6 @@ export const useAuthStore = create<IAuthState>((set) => ({
       }
     }
   },
-
-  setUser: (user) =>
-    set({
-      user,
-      isInitialized: true,
-    }),
 
   logout: async () => {
     // 登出時清空狀態

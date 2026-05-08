@@ -17,7 +17,8 @@ router.get('/me', protect, async (req, res) => {
             user: {
               id: user._id,
               username: user.username,
-              email: user.email
+              email: user.email,
+              createdAt: user.createdAt
             }
         });
     } catch (error) {
@@ -101,7 +102,8 @@ router.post('/login', async (req, res) => {
             user: {
                 id: user._id,
                 username: user.username,
-                email: user.email
+                email: user.email,
+                createdAt: user.createdAt
             }
         });
     } catch (error) {

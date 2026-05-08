@@ -22,19 +22,11 @@ const theme = createTheme({
 })
 
 function App() {
-  const { setUser, isInitialized } = useAuthStore()
+  const { checkAuth, isInitialized } = useAuthStore()
 
   useEffect(() => {
-    const initAuth = async () => {
-      try {
-        const response = await api.get('/auth/me')
-        setUser(response.data.user)
-      } catch (error) {
-        setUser(null)
-      }
-    }
-    initAuth()
-  }, [setUser])
+    checkAuth()
+  }, [checkAuth])
 
   if (!isInitialized) {
     return (

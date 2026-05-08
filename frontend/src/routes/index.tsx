@@ -1,6 +1,8 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import LoginPage from '../pages/LoginPage'
 import RegisterPage from '../pages/RegisterPage'
+import ProfilePage from '../pages/ProfilePage'
+import PrivateRoute from '../components/PrivateRoute'
 import MainLayout from '../components/MainLayout'
 import MessageBoard from '../pages/MessageBoard'
 
@@ -20,6 +22,14 @@ const router = createBrowserRouter([
       {
         index: true,
         element: <MessageBoard />,
+      },
+      {
+        path: 'profile',
+        element: (
+          <PrivateRoute>
+            <ProfilePage />
+          </PrivateRoute>
+        ),
       },
     ],
   },
