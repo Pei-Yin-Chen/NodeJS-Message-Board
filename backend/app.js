@@ -6,6 +6,9 @@ const cookieParser = require('cookie-parser');
 // 引入 dotenv 並執行設定：讀取資料夾中的 .env 檔案，將裡面的變數放入 process.env 中
 require('dotenv').config();
 
+const passport = require('passport');
+require('./config/passport');
+
 // 建立 express 的實例（App 物件）
 const app = express();
 // 設定埠號：優先讀取環境變數中的 PORT，如果沒有則預設使用 5000
@@ -25,6 +28,7 @@ app.use(cors({
 }));
 app.use(cookieParser());
 app.use(express.json()); // 讓你能解析 JSON 格式的 Request Body
+app.use(passport.initialize()); // 啟動 Passport
 
 const authRoutes = require('./routes/auth');
 const messageRoutes = require('./routes/message');

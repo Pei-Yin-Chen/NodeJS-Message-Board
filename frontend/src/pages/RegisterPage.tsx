@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import {
   Container,
   Box,
+  Divider,
   Paper,
   Typography,
   TextField,
@@ -14,6 +15,7 @@ import { useNavigate } from 'react-router-dom'
 import Visibility from '@mui/icons-material/Visibility'
 import VisibilityOff from '@mui/icons-material/VisibilityOff'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
+import GoogleIcon from '@mui/icons-material/Google'
 import { useAuthStore } from '../store/useAuthStore'
 
 const RegisterPage = () => {
@@ -56,6 +58,10 @@ const RegisterPage = () => {
     } else {
       setError(result.error)
     }
+  }
+
+  const handleGoogleLogin = () => {
+    window.location.href = `${import.meta.env.VITE_API_URL}/auth/google`
   }
 
   return (
@@ -203,6 +209,31 @@ const RegisterPage = () => {
               }}
             >
               返回上一頁
+            </Button>
+
+            <Divider sx={{ my: 3 }}>
+              <Typography variant="body2" color="text.secondary">
+                或使用以下方式
+              </Typography>
+            </Divider>
+
+            <Button
+              fullWidth
+              variant="outlined"
+              startIcon={<GoogleIcon />}
+              onClick={handleGoogleLogin}
+              sx={{
+                py: 1,
+                textTransform: 'none',
+                borderColor: '#ddd',
+                color: '#444',
+                '&:hover': {
+                  borderColor: '#bbb',
+                  backgroundColor: '#f5f5f5',
+                },
+              }}
+            >
+              使用 Google 帳號登入
             </Button>
           </form>
         </Paper>

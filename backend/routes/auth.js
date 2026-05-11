@@ -3,11 +3,13 @@ const router = express.Router(); // 建立一個路由器實例
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User'); // 引入 User 模型
-const protect = require('../middleware/auth')
+const protect = require('../middleware/auth');
+const passport = require('passport');
+const generateToken = require('../utils/generateToken');
 
 router.get('/me', protect, async (req, res) => {
     try {
-        const user = await User.findById(req.user.userId).select('-password'); // 查詢結果排除 password 欄位
+        const user = await User.findById(req.user.id).select('-password'); // 查詢結果排除 password 欄位
 
         if (!user) {
             return res.status(404).json({ message: '找不到使用者' })
@@ -114,6 +116,46 @@ router.post('/login', async (req, res) => {
 router.post('/logout', (req, res) => {
     res.clearCookie('token');
     res.json({ message: '登出成功' });
+});
+
+router.get('/google', passport.authenticate('google', {
+    scope: ['profile', 'email'],
+    // prompt: 'select_account'
+    prompt: 'consent' // 強制顯示「您是否允許此應用程式...」的確認頁
+}));
+
+router.get('/google/callback', (req, res, next) => {
+    passport.authenticate('google', { session: false }, (err, user, info) => {
+        // 處理「取消授權」或「認證失敗」
+        if (err || !user) {
+            console.log('Google Auth Failed Info:', info);
+
+            // 判斷是否為使用者拒絕授權 (access_denied)
+            // info 通常會包含 Google 回傳的原始錯誤訊息
+            const isDenied = info?.message?.includes('access_denied') || !user;
+            const errorParam = isDenied ? 'access_denied' : 'oauth_failed';
+
+            return res.redirect(`${process.env.FRONTEND_URL}/login?error=${errorParam}`);
+        }
+
+        // 認證成功，執行登入邏輯
+        try {
+            const token = generateToken(user._id);
+
+            res.cookie('token', token, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'lax',
+                maxAge: 60 * 60 * 1000
+            });
+
+            // 成功後導回前端首頁
+            return res.redirect(process.env.FRONTEND_URL);
+        } catch (error) {
+            console.error('Token Generation Error:', error);
+            return res.redirect(`${process.env.FRONTEND_URL}/login?error=oauth_failed`);
+        }
+    })(req, res, next);
 });
 
 module.exports = router; // 導出路由器實例

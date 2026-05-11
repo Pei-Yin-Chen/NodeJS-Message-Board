@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useSearchParams, useNavigate } from 'react-router-dom'
 import {
   Alert,
   Container,
   Box,
+  Divider,
   Typography,
   TextField,
   Button,
@@ -13,6 +14,7 @@ import {
 } from '@mui/material'
 import Visibility from '@mui/icons-material/Visibility'
 import VisibilityOff from '@mui/icons-material/VisibilityOff'
+import GoogleIcon from '@mui/icons-material/Google'
 import PersonAddIcon from '@mui/icons-material/PersonAdd'
 import { useAuthStore } from '../store/useAuthStore'
 
@@ -21,7 +23,15 @@ const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const { user, isInitialized, loginAction } = useAuthStore()
+  const [searchParams] = useSearchParams();
+  const errorCode = searchParams.get('error');
   const navigate = useNavigate()
+
+  const errorMessages = {
+    access_denied: "您已取消 Google 授權。",
+    oauth_failed: "登入過程發生錯誤，請檢查網路連線。",
+    default: "登入失敗，請稍後再試。"
+  };
 
   const handleClickShowPassword = () => setShowPassword(!showPassword)
 
@@ -30,6 +40,14 @@ const LoginPage = () => {
     // 當使用者開始輸入時，清空錯誤訊息
     if (error) setError('')
   }
+
+  useEffect(() => {
+    if (errorCode) {
+      // 根據代碼對應訊息，若無對應則使用 default
+      const message = errorMessages[errorCode as keyof typeof errorMessages] || errorMessages.default;
+      setError(message);
+    }
+  }, [errorCode])
 
   useEffect(() => {
     if (isInitialized && user) {
@@ -50,6 +68,10 @@ const LoginPage = () => {
     } else {
       setError(result.error || '登入失敗，請檢查您的帳號密碼')
     }
+  }
+
+  const handleGoogleLogin = () => {
+    window.location.href = `${import.meta.env.VITE_API_URL}/auth/google`
   }
 
   return (
@@ -177,6 +199,31 @@ const LoginPage = () => {
               }}
             >
               註冊新帳號
+            </Button>
+
+            <Divider sx={{ my: 3 }}>
+              <Typography variant="body2" color="text.secondary">
+                或使用以下方式
+              </Typography>
+            </Divider>
+
+            <Button
+              fullWidth
+              variant="outlined"
+              startIcon={<GoogleIcon />}
+              onClick={handleGoogleLogin}
+              sx={{
+                py: 1,
+                textTransform: 'none',
+                borderColor: '#ddd',
+                color: '#444',
+                '&:hover': {
+                  borderColor: '#bbb',
+                  backgroundColor: '#f5f5f5',
+                },
+              }}
+            >
+              使用 Google 帳號登入
             </Button>
           </form>
         </Paper>
