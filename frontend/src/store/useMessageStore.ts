@@ -27,7 +27,7 @@ interface IMessageState {
   deleteMessage: (id: string) => Promise<{ success: boolean; message?: string }>
 }
 
-export const useMessageStore = create<IMessageState>((set, get) => ({
+export const useMessageStore = create<IMessageState>((set) => ({
   messages: [],
   loading: false,
   error: null,
@@ -74,7 +74,7 @@ export const useMessageStore = create<IMessageState>((set, get) => ({
         ),
       }))
       return { success: true }
-    } catch (err) {
+    } catch (err: any) {
       return {
         success: false,
         message: err.response?.data.message || '更新失敗',
@@ -90,7 +90,7 @@ export const useMessageStore = create<IMessageState>((set, get) => ({
         messages: state.messages.filter((msg) => msg._id !== id),
       }))
       return { success: true }
-    } catch (err) {
+    } catch (err: any) {
       return {
         success: false,
         message: err.response?.data?.message || '刪除失敗',

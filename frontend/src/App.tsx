@@ -9,7 +9,6 @@ import {
 } from '@mui/material'
 import router from './routes'
 import { useAuthStore } from './store/useAuthStore'
-import api from './api/axiosInstance'
 
 const theme = createTheme({
   palette: {

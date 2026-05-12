@@ -1,4 +1,3 @@
-import React from 'react'
 import {
   Container,
   Paper,
@@ -10,7 +9,6 @@ import {
   Chip,
 } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
-import PersonIcon from '@mui/icons-material/Person'
 import LogoutIcon from '@mui/icons-material/Logout'
 import EmailIcon from '@mui/icons-material/Email'
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth'

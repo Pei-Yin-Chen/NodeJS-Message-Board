@@ -18,20 +18,27 @@ import GoogleIcon from '@mui/icons-material/Google'
 import PersonAddIcon from '@mui/icons-material/PersonAdd'
 import { useAuthStore } from '../store/useAuthStore'
 
+const ERROR_MESSAGES = {
+  access_denied: '您已取消 Google 授權。',
+  oauth_failed: '登入過程發生錯誤，請檢查網路連線。',
+  default: '登入失敗，請稍後再試。',
+}
+
 const LoginPage = () => {
   const [formData, setFormData] = useState({ email: '', password: '' })
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const { user, isInitialized, loginAction } = useAuthStore()
-  const [searchParams] = useSearchParams();
-  const errorCode = searchParams.get('error');
+  const [searchParams] = useSearchParams()
+  const errorCode = searchParams.get('error')
   const navigate = useNavigate()
 
-  const errorMessages = {
-    access_denied: "您已取消 Google 授權。",
-    oauth_failed: "登入過程發生錯誤，請檢查網路連線。",
-    default: "登入失敗，請稍後再試。"
-  };
+  const urlErrorMessage = errorCode
+    ? ERROR_MESSAGES[errorCode as keyof typeof ERROR_MESSAGES] ||
+      ERROR_MESSAGES.default
+    : ''
+
+  const displayError = error || urlErrorMessage
 
   const handleClickShowPassword = () => setShowPassword(!showPassword)
 
@@ -40,14 +47,6 @@ const LoginPage = () => {
     // 當使用者開始輸入時，清空錯誤訊息
     if (error) setError('')
   }
-
-  useEffect(() => {
-    if (errorCode) {
-      // 根據代碼對應訊息，若無對應則使用 default
-      const message = errorMessages[errorCode as keyof typeof errorMessages] || errorMessages.default;
-      setError(message);
-    }
-  }, [errorCode])
 
   useEffect(() => {
     if (isInitialized && user) {
@@ -66,7 +65,7 @@ const LoginPage = () => {
     if (result.success) {
       navigate('/')
     } else {
-      setError(result.error || '登入失敗，請檢查您的帳號密碼')
+      setError(result.error?.message || '登入失敗，請檢查您的帳號密碼')
     }
   }
 
@@ -107,7 +106,7 @@ const LoginPage = () => {
             登入會員
           </Typography>
 
-          {error && (
+          {displayError && (
             <Alert
               severity="error"
               sx={{
@@ -116,7 +115,7 @@ const LoginPage = () => {
                 fontSize: '14px',
               }}
             >
-              {error}
+              {displayError}
             </Alert>
           )}
 

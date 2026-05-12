@@ -20,6 +20,9 @@ export default defineConfig([
     languageOptions: {
       globals: globals.browser,
     },
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+    },
   },
   // 將 Prettier 放在最後一個 extends，以確保其規則優先
   prettier,

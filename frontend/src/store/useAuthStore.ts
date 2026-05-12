@@ -8,12 +8,30 @@ interface IUser {
   createdAt?: string
 }
 
+interface ILoginCredentials {
+  email: string
+  password?: string // 如果是 OAuth 可能不需要 password
+}
+
+interface IRegisterData extends ILoginCredentials {
+  username: string
+}
+
+interface IAuthError {
+  message: string
+  code?: string
+}
+
 interface IAuthState {
   user: IUser | null
   isInitialized: boolean
   checkAuth: () => Promise<void>
-  registerAction: (userData: any) => Promise<{ success: boolean; error?: any }>
-  loginAction: (credentials: any) => Promise<{ success: boolean; error?: any }>
+  registerAction: (
+    userData: IRegisterData,
+  ) => Promise<{ success: boolean; error?: IAuthError }>
+  loginAction: (
+    credentials: ILoginCredentials,
+  ) => Promise<{ success: boolean; error?: IAuthError }>
   logout: () => Promise<void>
 }
 
@@ -28,7 +46,7 @@ export const useAuthStore = create<IAuthState>((set) => ({
         user: res.data.user,
         isInitialized: true,
       })
-    } catch (err) {
+    } catch {
       set({
         user: null,
         isInitialized: true,
@@ -40,7 +58,7 @@ export const useAuthStore = create<IAuthState>((set) => ({
     try {
       await api.post('/auth/register', userData)
       return { success: true }
-    } catch (err) {
+    } catch (err: any) {
       return {
         success: false,
         error: err.response?.data?.message || '註冊失敗',
@@ -56,7 +74,7 @@ export const useAuthStore = create<IAuthState>((set) => ({
         isInitialized: true,
       })
       return { success: true }
-    } catch (err) {
+    } catch (err: any) {
       return {
         success: false,
         error: err.response?.data?.message || '登入失敗，請稍後再試',

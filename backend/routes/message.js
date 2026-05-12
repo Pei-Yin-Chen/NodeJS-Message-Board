@@ -23,8 +23,14 @@ router.post('/', auth, async (req, res) => {
             return res.status(400).json({ message: '訊息內容不能為空' });
         }
 
+        const userId = req.user.id || req.user.userId || req.user._id;
+
+        if (!userId) {
+            return res.status(401).join({ message: '無效的使用者資訊' });
+        }
+
         const newMessage = new Message({
-            user: req.user.userId, // 這是從 auth middleware 存入 req 的資料
+            user: userId, // 這是從 auth middleware 存入 req 的資料
             content
         });
 
@@ -51,7 +57,7 @@ router.put('/:messageId', auth, async (req, res) => {
         }
 
         // 權限檢查：只能修改自己的留言
-        if (message.user.toString() !== req.user.userId) {
+        if (message.user.toString() !== (req.user.userId || req.user.id || req.user._id)) {
             return res.status(401).json({ message: '權限不足' });
         }
 
@@ -81,7 +87,7 @@ router.delete('/:messageId', auth, async (req, res) => {
 
         // 權限檢查：比對「留言的作者 ID」是否等於「目前登入的使用者 ID」
         // 注意：message.user 是 ObjectId 物件，req.user.user.userId 是字串，所以要轉成字串比對
-        if (message.user.toString() !== req.user.userId) {
+        if (message.user.toString() !== (req.user.userId || req.user.id || req.user._id)) {
             return res.status(401).json({ message: '權限不足，只能刪除自己的留言' });
         }
 

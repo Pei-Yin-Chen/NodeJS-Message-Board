@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
 import {
   Alert,
   Box,
@@ -31,7 +31,6 @@ const MessageBoard = () => {
 
   return (
     <Container maxWidth="md" sx={{ mt: 4 }}>
-      {/* <Box sx={{ my: 4 }}> */}
       <Typography variant="h4" gutterBottom sx={{ fontWeight: 700 }}>
         最新留言
       </Typography>
@@ -90,7 +89,6 @@ const MessageBoard = () => {
           </Box>
         )}
       </Stack>
-      {/* </Box> */}
     </Container>
   )
 }

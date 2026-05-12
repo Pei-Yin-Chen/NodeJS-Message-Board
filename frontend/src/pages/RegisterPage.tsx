@@ -56,7 +56,7 @@ const RegisterPage = () => {
       alert('註冊成功！請重新登入')
       navigate('/login')
     } else {
-      setError(result.error)
+      setError(result.error?.message || '註冊失敗')
     }
   }
 
