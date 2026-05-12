@@ -1,0 +1,19 @@
+services:
+  # 服務 A：後端
+  backend:
+    build: ./backend                         # 去 backend 資料夾找 Dockerfile 建立映像檔
+    ports:
+      - "5000:5000"
+    env_file: ./backend/.env.production      # 把環境變數塞進去
+    # 不需要對外開放 ports，因為 Nginx 會幫我們轉發
+
+  # 服務 B：前端
+  frontend:
+    build: ./frontend                        # 直接去裡面執行那兩階段的 Dockerfile
+    ports:
+      - "80:80"                              # 把電腦的 80 對接到容器的 80
+    volumes:
+      # 這裡可以直接讀取根目錄的 nginx.conf，投射到容器裡
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - backend                              # 確保後端先啟動，前端再啟動
