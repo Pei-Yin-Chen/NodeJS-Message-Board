@@ -11,7 +11,7 @@ router.get('/', async (req, res) => {
 
         res.json(messages);
     } catch (err) {
-        res.status.json({ message: '取得資料失敗' });
+        res.status(500).json({ message: '取得資料失敗' });
     }
 });
 
@@ -26,7 +26,7 @@ router.post('/', auth, async (req, res) => {
         const userId = req.user.id || req.user.userId || req.user._id;
 
         if (!userId) {
-            return res.status(401).join({ message: '無效的使用者資訊' });
+            return res.status(401).json({ message: '無效的使用者資訊' });
         }
 
         const newMessage = new Message({
