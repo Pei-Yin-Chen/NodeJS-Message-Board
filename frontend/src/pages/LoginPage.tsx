@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { useSearchParams, useNavigate } from 'react-router-dom'
+import { useSearchParams, useNavigate, useLocation } from 'react-router-dom'
 import {
   Alert,
   Container,
@@ -14,8 +14,12 @@ import {
 } from '@mui/material'
 import Visibility from '@mui/icons-material/Visibility'
 import VisibilityOff from '@mui/icons-material/VisibilityOff'
-import GoogleIcon from '@mui/icons-material/Google'
+import LoginIcon from '@mui/icons-material/Login'
 import PersonAddIcon from '@mui/icons-material/PersonAdd'
+import ArrowBackIcon from '@mui/icons-material/ArrowBack'
+import GoogleIcon from '@mui/icons-material/Google'
+import { glassCard, glassInput, glassAuthPrimary, glassAuthOutlined, glassSectionTitle } from '../styles/glass'
+import PageBackground from '../components/PageBackground'
 import { useAuthStore } from '../store/useAuthStore'
 
 const ERROR_MESSAGES = {
@@ -31,7 +35,11 @@ const LoginPage = () => {
   const { user, isInitialized, loginAction } = useAuthStore()
   const [searchParams] = useSearchParams()
   const errorCode = searchParams.get('error')
+  const location = useLocation()
   const navigate = useNavigate()
+
+  const registerSuccessMessage =
+    (location.state as { message?: string } | null)?.message ?? ''
 
   const urlErrorMessage = errorCode
     ? ERROR_MESSAGES[errorCode as keyof typeof ERROR_MESSAGES] ||
@@ -74,37 +82,39 @@ const LoginPage = () => {
   }
 
   return (
-    <Box
-      sx={{
-        minHeight: '90vh',
-        display: 'flex',
-        alignItems: 'center',
-      }}
-    >
-      <Container maxWidth="xs">
+    <PageBackground>
+      <Box
+        sx={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+        }}
+      >
+        <Container maxWidth="xs">
         <Paper
           sx={{
+            ...glassCard,
             p: 4,
-            borderRadius: '15px',
-            boxShadow: '0 4px 15px rgba(0,0,0,0.08)',
             display: 'flex',
             flexDirection: 'column',
           }}
         >
-          <Typography
-            variant="h5"
-            sx={{
-              fontWeight: 'bold',
-              color: '#007bff',
-              mb: 3,
-              pb: 1,
-              borderBottom: '2px solid #f0f2f5',
-              textAlign: 'left',
-              width: '100%',
-            }}
-          >
+          <Typography variant="h5" sx={glassSectionTitle}>
             登入會員
           </Typography>
+
+          {registerSuccessMessage && (
+            <Alert
+              severity="success"
+              sx={{
+                mb: 3,
+                borderRadius: '8px',
+                fontSize: '14px',
+              }}
+            >
+              {registerSuccessMessage}
+            </Alert>
+          )}
 
           {displayError && (
             <Alert
@@ -132,6 +142,7 @@ const LoginPage = () => {
                 onChange={handleChange}
                 size="small"
                 required
+                sx={glassInput}
               />
             </Box>
 
@@ -148,6 +159,7 @@ const LoginPage = () => {
                 onChange={handleChange}
                 size="small"
                 required
+                sx={glassInput}
                 slotProps={{
                   input: {
                     endAdornment: (
@@ -169,15 +181,8 @@ const LoginPage = () => {
               type="submit"
               fullWidth
               variant="contained"
-              sx={{
-                py: 1.2,
-                borderRadius: '8px',
-                bgcolor: '#007bff',
-                fontWeight: 'bold',
-                mb: 1.5,
-                textTransform: 'none',
-                '&:hover': { bgcolor: '#0056b3' },
-              }}
+              startIcon={<LoginIcon />}
+              sx={{ ...glassAuthPrimary, mb: 1.5 }}
             >
               登入系統
             </Button>
@@ -185,17 +190,19 @@ const LoginPage = () => {
             <Button
               fullWidth
               variant="outlined"
+              onClick={() => navigate(-1)}
+              startIcon={<ArrowBackIcon />}
+              sx={{ ...glassAuthOutlined, mb: 1.5 }}
+            >
+              返回上一頁
+            </Button>
+
+            <Button
+              fullWidth
+              variant="outlined"
               onClick={() => navigate('/register')}
               startIcon={<PersonAddIcon />}
-              sx={{
-                py: 1.2,
-                borderRadius: '8px',
-                color: '#666',
-                borderColor: '#ccc',
-                fontWeight: 'bold',
-                textTransform: 'none',
-                '&:hover': { borderColor: '#999', bgcolor: '#f5f5f5' },
-              }}
+              sx={glassAuthOutlined}
             >
               註冊新帳號
             </Button>
@@ -211,23 +218,15 @@ const LoginPage = () => {
               variant="outlined"
               startIcon={<GoogleIcon />}
               onClick={handleGoogleLogin}
-              sx={{
-                py: 1,
-                textTransform: 'none',
-                borderColor: '#ddd',
-                color: '#444',
-                '&:hover': {
-                  borderColor: '#bbb',
-                  backgroundColor: '#f5f5f5',
-                },
-              }}
+              sx={{ ...glassAuthOutlined, py: 1 }}
             >
               使用 Google 帳號登入
             </Button>
           </form>
         </Paper>
-      </Container>
-    </Box>
+        </Container>
+      </Box>
+    </PageBackground>
   )
 }
 

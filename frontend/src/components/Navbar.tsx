@@ -7,27 +7,37 @@ import {
   IconButton,
   Container,
 } from '@mui/material'
+import { useState } from 'react'
 import HomeIcon from '@mui/icons-material/Home'
+import LoginIcon from '@mui/icons-material/Login'
+import PersonAddIcon from '@mui/icons-material/PersonAdd'
 import LogoutIcon from '@mui/icons-material/Logout'
 import AccountCircle from '@mui/icons-material/AccountCircle'
+import ConfirmDialog from './ConfirmDialog'
+import { glassNavbar, glassNavOutlined, glassNavPrimary, glassNavLogout } from '../styles/glass'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/useAuthStore'
 
 const Navbar = () => {
   const navigate = useNavigate()
+  const [logoutOpen, setLogoutOpen] = useState(false)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
 
   const { user, logout } = useAuthStore()
 
-  const handleLogout = async () => {
+  const handleLogoutConfirm = async () => {
+    setIsLoggingOut(true)
     await logout()
+    setIsLoggingOut(false)
+    setLogoutOpen(false)
     navigate('/')
   }
 
   return (
     <AppBar
       position="sticky"
-      elevation={1}
-      sx={{ backgroundColor: '#fff', color: '#333' }}
+      elevation={0}
+      sx={{ top: 0, zIndex: 1100, alignSelf: 'flex-start', width: '100%', ...glassNavbar, color: '#333' }}
     >
       <Container maxWidth="lg">
         <Toolbar disableGutters>
@@ -71,24 +81,32 @@ const Navbar = () => {
                   <AccountCircle />
                 </IconButton>
                 <Button
-                  color="error"
                   variant="outlined"
                   size="small"
                   startIcon={<LogoutIcon />}
-                  onClick={handleLogout}
-                  sx={{ borderRadius: '8px', textTransform: 'none' }}
+                  onClick={() => setLogoutOpen(true)}
+                  sx={glassNavLogout}
                 >
                   登出
                 </Button>
               </>
             ) : (
               <>
-                <Button color="inherit" onClick={() => navigate('/login')}>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<LoginIcon />}
+                  onClick={() => navigate('/login')}
+                  sx={glassNavOutlined}
+                >
                   登入
                 </Button>
                 <Button
                   variant="contained"
+                  size="small"
+                  startIcon={<PersonAddIcon />}
                   onClick={() => navigate('/register')}
+                  sx={glassNavPrimary}
                 >
                   註冊
                 </Button>
@@ -97,6 +115,18 @@ const Navbar = () => {
           </Box>
         </Toolbar>
       </Container>
+
+      <ConfirmDialog
+        open={logoutOpen}
+        title="登出確認"
+        message="確定要登出嗎？"
+        confirmLabel="登出"
+        loadingLabel="登出中…"
+        isLoading={isLoggingOut}
+        onClose={() => setLogoutOpen(false)}
+        onConfirm={handleLogoutConfirm}
+        confirmIcon={<LogoutIcon />}
+      />
     </AppBar>
   )
 }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, memo } from 'react'
 import {
   Box,
   Button,
@@ -8,10 +8,16 @@ import {
   Typography,
   IconButton,
   TextField,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
 } from '@mui/material'
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
 import PersonIcon from '@mui/icons-material/Person'
+import { glassCardLite, glassCardContent, glassInput, glassCard, glassAuthOutlined, glassAuthLogout } from '../styles/glass'
 import { useAuthStore } from '../store/useAuthStore'
 import { useMessageStore } from '../store/useMessageStore'
 
@@ -33,6 +39,8 @@ const MessageCard: React.FC<IMessageProps> = ({ message }) => {
 
   const [isEditing, setIsEditing] = useState(false)
   const [editContent, setEditContent] = useState(message.content)
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   // 判斷是否為本人
   const isOwner =
@@ -54,15 +62,26 @@ const MessageCard: React.FC<IMessageProps> = ({ message }) => {
     setIsEditing(false)
   }
 
-  const handleDelete = async () => {
-    if (window.confirm('確定要刪除這則留言嗎？')) {
-      await deleteMessage(message._id)
-    }
+  const handleDeleteConfirm = async () => {
+    setIsDeleting(true)
+    await deleteMessage(message._id)
+    setIsDeleting(false)
+    setDeleteOpen(false)
   }
 
   return (
-    <Card elevation={1} sx={{ borderRadius: 3, mb: 2, position: 'relative' }}>
-      <CardContent sx={{ p: '20px !important' }}>
+    <>
+    <Card
+      elevation={0}
+      sx={{
+        ...glassCardLite,
+        mb: 2,
+        position: 'relative',
+        contentVisibility: 'auto',
+        containIntrinsicSize: '0 140px',
+      }}
+    >
+      <CardContent sx={{ ...glassCardContent, p: '20px !important' }}>
         {/* 1. 左上半邊：Avatar + 使用者名稱 */}
         <Box
           sx={{
@@ -92,7 +111,7 @@ const MessageCard: React.FC<IMessageProps> = ({ message }) => {
               <IconButton size="small" onClick={() => setIsEditing(true)}>
                 <EditIcon fontSize="small" />
               </IconButton>
-              <IconButton size="small" color="error" onClick={handleDelete}>
+              <IconButton size="small" color="error" onClick={() => setDeleteOpen(true)}>
                 <DeleteIcon fontSize="small" />
               </IconButton>
             </Box>
@@ -111,6 +130,7 @@ const MessageCard: React.FC<IMessageProps> = ({ message }) => {
                 onChange={(e) => setEditContent(e.target.value)}
                 autoFocus
                 size="small"
+                sx={glassInput}
               />
               <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
                 <Button
@@ -154,7 +174,40 @@ const MessageCard: React.FC<IMessageProps> = ({ message }) => {
         </Box>
       </CardContent>
     </Card>
+
+    <Dialog
+      open={deleteOpen}
+      onClose={() => !isDeleting && setDeleteOpen(false)}
+      slotProps={{ paper: { sx: { ...glassCard, minWidth: 320 } } }}
+    >
+      <DialogTitle sx={{ fontWeight: 600 }}>刪除留言</DialogTitle>
+      <DialogContent>
+        <DialogContentText color="text.secondary">
+          確定要刪除這則留言嗎？此操作無法復原。
+        </DialogContentText>
+      </DialogContent>
+      <DialogActions sx={{ px: 3, pb: 2 }}>
+        <Button
+          variant="outlined"
+          onClick={() => setDeleteOpen(false)}
+          disabled={isDeleting}
+          sx={glassAuthOutlined}
+        >
+          取消
+        </Button>
+        <Button
+          variant="outlined"
+          onClick={handleDeleteConfirm}
+          disabled={isDeleting}
+          startIcon={<DeleteIcon />}
+          sx={glassAuthLogout}
+        >
+          {isDeleting ? '刪除中…' : '刪除'}
+        </Button>
+      </DialogActions>
+    </Dialog>
+    </>
   )
 }
 
-export default MessageCard
+export default memo(MessageCard)

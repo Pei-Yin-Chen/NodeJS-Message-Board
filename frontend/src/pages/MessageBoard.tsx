@@ -7,27 +7,40 @@ import {
   Typography,
   Paper,
   Divider,
-  CircularProgress,
   Stack,
+  Skeleton,
 } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
+import LoginIcon from '@mui/icons-material/Login'
 import CreateMessage from '../components/CreateMessage.tsx'
 import MessageCard from '../components/MessageCard.tsx'
+import { glassCard, glassCardLite, glassAuthPrimary } from '../styles/glass'
 import { useAuthStore } from '../store/useAuthStore'
 import { useMessageStore } from '../store/useMessageStore'
 
+const SKELETON_COUNT = 3
+
+const MessageSkeleton = () => (
+  <Paper sx={{ ...glassCardLite, p: 2.5 }}>
+    <Skeleton variant="circular" width={24} height={24} sx={{ mb: 2 }} />
+    <Skeleton variant="text" width="30%" />
+    <Skeleton variant="text" />
+    <Skeleton variant="text" width="80%" />
+  </Paper>
+)
+
 const MessageBoard = () => {
-  const { messages, loading, error, fetchMessages } = useMessageStore()
+  const { messages, isFetching, error, fetchMessages } = useMessageStore()
   const { user } = useAuthStore()
   const navigate = useNavigate()
 
   useEffect(() => {
-    fetchMessages()
-  }, [fetchMessages])
+    if (messages.length === 0) {
+      fetchMessages()
+    }
+  }, [fetchMessages, messages.length])
 
-  if (loading && messages.length === 0) {
-    return <CircularProgress sx={{ display: 'block', mx: 'auto', mt: 10 }} />
-  }
+  const showSkeletons = isFetching && messages.length === 0
 
   return (
     <Container maxWidth="md" sx={{ mt: 4 }}>
@@ -46,14 +59,13 @@ const MessageBoard = () => {
         <CreateMessage />
       ) : (
         <Paper
-          variant="outlined"
           sx={{
+            ...glassCard,
             p: 4,
             mb: 4,
             textAlign: 'center',
-            borderRadius: '15px',
             borderStyle: 'dashed',
-            bgcolor: '#f8f9fa',
+            borderColor: 'rgba(255, 255, 255, 0.6)',
           }}
         >
           <Typography variant="body1" sx={{ color: 'text.secondary', mb: 2 }}>
@@ -61,27 +73,29 @@ const MessageBoard = () => {
           </Typography>
           <Button
             variant="contained"
+            startIcon={<LoginIcon />}
             onClick={() => navigate('/login')}
-            sx={{
-              borderRadius: '20px',
-              px: 4,
-              fontWeight: 'bold',
-              textTransform: 'none',
-            }}
+            sx={glassAuthPrimary}
           >
             立即登入
           </Button>
         </Paper>
       )}
 
-      <Divider sx={{ mb: 4 }} />
+      <Divider sx={{ mb: 4, borderColor: 'rgba(255, 255, 255, 0.35)' }} />
 
       {/* 留言列表 */}
       <Stack spacing={2} sx={{ mb: 4 }}>
+        {showSkeletons &&
+          Array.from({ length: SKELETON_COUNT }, (_, i) => (
+            <MessageSkeleton key={`skeleton-${i}`} />
+          ))}
+
         {messages.map((msg) => (
           <MessageCard key={msg._id} message={msg} />
         ))}
-        {!loading && messages.length === 0 && (
+
+        {!isFetching && messages.length === 0 && (
           <Box sx={{ py: 10, textAlign: 'center' }}>
             <Typography color="text.secondary">
               目前還沒有任何留言。快來搶頭香吧！

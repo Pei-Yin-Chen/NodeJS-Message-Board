@@ -8,15 +8,20 @@ import {
   Divider,
   Chip,
 } from '@mui/material'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import LogoutIcon from '@mui/icons-material/Logout'
 import EmailIcon from '@mui/icons-material/Email'
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth'
+import ConfirmDialog from '../components/ConfirmDialog'
+import { glassCard, glassAuthLogout } from '../styles/glass'
 import { useAuthStore } from '../store/useAuthStore'
 
 const ProfilePage = () => {
   const { user, logout } = useAuthStore()
   const navigate = useNavigate()
+  const [logoutOpen, setLogoutOpen] = useState(false)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
 
   if (!user) return null
 
@@ -24,14 +29,18 @@ const ProfilePage = () => {
     ? new Date(user.createdAt).toLocaleDateString('zh-TW')
     : '未知'
 
-  const handleLogout = async () => {
+  const handleLogoutConfirm = async () => {
+    setIsLoggingOut(true)
     await logout()
+    setIsLoggingOut(false)
+    setLogoutOpen(false)
     navigate('/', { replace: true })
   }
 
   return (
+    <>
     <Container maxWidth="sm" sx={{ mt: 8 }}>
-      <Paper elevation={3} sx={{ p: 4, borderRadius: 4, textAlign: 'center' }}>
+      <Paper elevation={0} sx={{ ...glassCard, p: 4, textAlign: 'center' }}>
         <Avatar
           sx={{
             width: 80,
@@ -54,7 +63,7 @@ const ProfilePage = () => {
           sx={{ mb: 4 }}
         />
 
-        <Divider sx={{ mb: 4 }} />
+        <Divider sx={{ mb: 4, borderColor: 'rgba(255, 255, 255, 0.4)' }} />
 
         <Box sx={{ textAlign: 'left', px: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 2.5 }}>
@@ -80,22 +89,28 @@ const ProfilePage = () => {
 
         <Button
           fullWidth
-          variant="contained"
-          color="error"
+          variant="outlined"
           startIcon={<LogoutIcon />}
-          onClick={handleLogout}
-          sx={{
-            py: 1.5,
-            borderRadius: 2,
-            fontWeight: 'bold',
-            boxShadow: 'none',
-            '&:hover': { boxShadow: 'none', bgcolor: '#d32f2f' },
-          }}
+          onClick={() => setLogoutOpen(true)}
+          sx={glassAuthLogout}
         >
           登出系統
         </Button>
       </Paper>
     </Container>
+
+    <ConfirmDialog
+      open={logoutOpen}
+      title="登出確認"
+      message="確定要登出嗎？"
+      confirmLabel="登出"
+      loadingLabel="登出中…"
+      isLoading={isLoggingOut}
+      onClose={() => setLogoutOpen(false)}
+      onConfirm={handleLogoutConfirm}
+      confirmIcon={<LogoutIcon />}
+    />
+    </>
   )
 }
 

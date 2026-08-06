@@ -15,7 +15,10 @@ import { useNavigate } from 'react-router-dom'
 import Visibility from '@mui/icons-material/Visibility'
 import VisibilityOff from '@mui/icons-material/VisibilityOff'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
+import PersonAddIcon from '@mui/icons-material/PersonAdd'
 import GoogleIcon from '@mui/icons-material/Google'
+import { glassCard, glassInput, glassAuthPrimary, glassAuthOutlined, glassSectionTitle } from '../styles/glass'
+import PageBackground from '../components/PageBackground'
 import { useAuthStore } from '../store/useAuthStore'
 
 const RegisterPage = () => {
@@ -26,11 +29,14 @@ const RegisterPage = () => {
     confirmPassword: '',
   })
   const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [error, setError] = useState('')
   const { registerAction } = useAuthStore()
   const navigate = useNavigate()
 
   const handleClickShowPassword = () => setShowPassword(!showPassword)
+  const handleClickShowConfirmPassword = () =>
+    setShowConfirmPassword(!showConfirmPassword)
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
@@ -53,8 +59,9 @@ const RegisterPage = () => {
     })
 
     if (result.success) {
-      alert('註冊成功！請重新登入')
-      navigate('/login')
+      navigate('/login', {
+        state: { message: '註冊成功！請重新登入' },
+      })
     } else {
       setError(result.error?.message || '註冊失敗')
     }
@@ -65,26 +72,18 @@ const RegisterPage = () => {
   }
 
   return (
-    <Box sx={{ minHeight: '90vh', display: 'flex', alignItems: 'center' }}>
-      <Container maxWidth="xs">
+    <PageBackground>
+      <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center' }}>
+        <Container maxWidth="xs">
         <Paper
           sx={{
+            ...glassCard,
             p: 4,
-            borderRadius: '15px',
-            boxShadow: '0 4px 15px rgba(0,0,0,0.08)',
+            display: 'flex',
+            flexDirection: 'column',
           }}
         >
-          <Typography
-            variant="h5"
-            sx={{
-              fontWeight: 'bold',
-              color: '#007bff',
-              mb: 3,
-              pb: 1,
-              borderBottom: '2px solid #f0f2f5',
-              textAlign: 'left',
-            }}
-          >
+          <Typography variant="h5" sx={glassSectionTitle}>
             註冊帳號
           </Typography>
 
@@ -107,6 +106,7 @@ const RegisterPage = () => {
                 onChange={handleChange}
                 size="small"
                 required
+                sx={glassInput}
               />
             </Box>
 
@@ -122,6 +122,7 @@ const RegisterPage = () => {
                 onChange={handleChange}
                 size="small"
                 required
+                sx={glassInput}
               />
             </Box>
 
@@ -138,6 +139,7 @@ const RegisterPage = () => {
                 onChange={handleChange}
                 size="small"
                 required
+                sx={glassInput}
                 slotProps={{
                   input: {
                     endAdornment: (
@@ -155,7 +157,6 @@ const RegisterPage = () => {
               />
             </Box>
 
-            {/* 💡 新增的再次確認密碼框 */}
             <Box sx={{ mb: 3, textAlign: 'left' }}>
               <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 0.5 }}>
                 確認密碼
@@ -163,17 +164,35 @@ const RegisterPage = () => {
               <TextField
                 fullWidth
                 name="confirmPassword"
-                type={showPassword ? 'text' : 'password'}
+                type={showConfirmPassword ? 'text' : 'password'}
                 placeholder="請再次輸入密碼"
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 size="small"
                 required
-                // 如果密碼不一致，可以讓框線變紅
+                sx={glassInput}
                 error={
                   formData.confirmPassword !== '' &&
                   formData.password !== formData.confirmPassword
                 }
+                slotProps={{
+                  input: {
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={handleClickShowConfirmPassword}
+                          edge="end"
+                        >
+                          {showConfirmPassword ? (
+                            <Visibility />
+                          ) : (
+                            <VisibilityOff />
+                          )}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  },
+                }}
               />
             </Box>
 
@@ -181,14 +200,8 @@ const RegisterPage = () => {
               type="submit"
               fullWidth
               variant="contained"
-              sx={{
-                py: 1.2,
-                borderRadius: '8px',
-                bgcolor: '#28a745',
-                fontWeight: 'bold',
-                mb: 1.5,
-                '&:hover': { bgcolor: '#218838' },
-              }}
+              startIcon={<PersonAddIcon />}
+              sx={{ ...glassAuthPrimary, mb: 1.5 }}
             >
               立即註冊
             </Button>
@@ -198,15 +211,7 @@ const RegisterPage = () => {
               variant="outlined"
               onClick={() => navigate(-1)}
               startIcon={<ArrowBackIcon />}
-              sx={{
-                py: 1.2,
-                borderRadius: '8px',
-                color: '#666',
-                borderColor: '#ccc',
-                fontWeight: 'bold',
-                textTransform: 'none',
-                '&:hover': { borderColor: '#999', bgcolor: '#f5f5f5' },
-              }}
+              sx={glassAuthOutlined}
             >
               返回上一頁
             </Button>
@@ -222,23 +227,15 @@ const RegisterPage = () => {
               variant="outlined"
               startIcon={<GoogleIcon />}
               onClick={handleGoogleLogin}
-              sx={{
-                py: 1,
-                textTransform: 'none',
-                borderColor: '#ddd',
-                color: '#444',
-                '&:hover': {
-                  borderColor: '#bbb',
-                  backgroundColor: '#f5f5f5',
-                },
-              }}
+              sx={{ ...glassAuthOutlined, py: 1 }}
             >
               使用 Google 帳號登入
             </Button>
           </form>
         </Paper>
-      </Container>
-    </Box>
+        </Container>
+      </Box>
+    </PageBackground>
   )
 }
 

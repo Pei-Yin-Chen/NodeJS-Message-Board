@@ -13,9 +13,8 @@ interface IMessage {
 
 interface IMessageState {
   messages: IMessage[]
-  loading: boolean
+  isFetching: boolean
   error: string | null
-  // Actions
   fetchMessages: () => Promise<void>
   addMessage: (
     content: string,
@@ -27,32 +26,38 @@ interface IMessageState {
   deleteMessage: (id: string) => Promise<{ success: boolean; message?: string }>
 }
 
-export const useMessageStore = create<IMessageState>((set) => ({
+export const useMessageStore = create<IMessageState>((set, get) => ({
   messages: [],
-  loading: false,
+  isFetching: false,
   error: null,
 
-  // 取得所有留言
   fetchMessages: async () => {
-    set({ loading: true, error: null })
+    if (get().isFetching) return
+
+    set((state) => ({
+      isFetching: true,
+      error: null,
+      // 已有快取時不先清空，避免閃爍
+      messages: state.messages,
+    }))
+
     try {
       const res = await api.get('/messages')
-      set({ messages: res.data, loading: false })
+      set({ messages: res.data, isFetching: false })
     } catch (err: any) {
       set({
         error: err.response?.data?.message || '無法載入留言',
-        loading: false,
+        isFetching: false,
       })
     }
   },
 
-  // 新增留言 (順便更新狀態，讓 UI 即時反映)
   addMessage: async (content: string) => {
     try {
       const res = await api.post('/messages', { content })
       const newMessage = res.data
       set((state) => ({
-        messages: [newMessage, ...state.messages], // 把新留言放在最上面
+        messages: [newMessage, ...state.messages],
       }))
       return { success: true }
     } catch (err: any) {

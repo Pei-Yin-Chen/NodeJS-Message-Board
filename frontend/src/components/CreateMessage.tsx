@@ -1,20 +1,25 @@
 import React, { useState } from 'react'
 import { TextField, Button, Paper, Box, Typography } from '@mui/material'
+import { glassCardLite, glassInput } from '../styles/glass'
 import { useMessageStore } from '../store/useMessageStore'
 import { useAuthStore } from '../store/useAuthStore'
 
 const CreateMessage = () => {
   const [content, setContent] = useState('')
-  const { addMessage, loading } = useMessageStore()
-  const { user } = useAuthStore() // 用來檢查是否登入
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const { addMessage } = useMessageStore()
+  const { user } = useAuthStore()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!content.trim()) return
+    if (!content.trim() || isSubmitting) return
 
+    setIsSubmitting(true)
     const result = await addMessage(content)
+    setIsSubmitting(false)
+
     if (result.success) {
-      setContent('') // 清空輸入框
+      setContent('')
     } else {
       alert(result.message || '發布失敗')
     }
@@ -22,14 +27,14 @@ const CreateMessage = () => {
 
   if (!user) {
     return (
-      <Paper sx={{ p: 2, mb: 4, bgcolor: '#f8f9fa', textAlign: 'center' }}>
+      <Paper sx={{ ...glassCardLite, p: 2, mb: 4, textAlign: 'center' }}>
         <Typography color="text.secondary">請先登入後再發布留言</Typography>
       </Paper>
     )
   }
 
   return (
-    <Paper sx={{ p: 2, mb: 4 }}>
+    <Paper sx={{ ...glassCardLite, p: 2, mb: 4 }}>
       <Box component="form" onSubmit={handleSubmit}>
         <TextField
           fullWidth
@@ -38,15 +43,15 @@ const CreateMessage = () => {
           placeholder="想說些什麼嗎？"
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          sx={{ mb: 2 }}
+          sx={{ mb: 2, ...glassInput }}
         />
         <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
           <Button
             type="submit"
             variant="contained"
-            disabled={loading || !content.trim()}
+            disabled={isSubmitting || !content.trim()}
           >
-            {loading ? '發布中...' : '發布留言'}
+            {isSubmitting ? '發布中...' : '發布留言'}
           </Button>
         </Box>
       </Box>
