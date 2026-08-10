@@ -16,12 +16,12 @@ const theme = createTheme({
   palette: {
     mode: 'light',
     primary: {
-      main: '#6366f1',
-      light: '#818cf8',
-      dark: '#4f46e5',
+      main: '#8f7355',
+      light: '#a8896a',
+      dark: '#6f5840',
     },
     background: {
-      default: '#eef2ff',
+      default: '#f5f0e9',
       paper: 'transparent',
     },
   },

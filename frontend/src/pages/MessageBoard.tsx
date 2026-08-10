@@ -1,7 +1,6 @@
 import { useEffect } from 'react'
 import {
   Alert,
-  Box,
   Button,
   Container,
   Typography,
@@ -11,10 +10,11 @@ import {
   Skeleton,
 } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
+import ChatBubbleOutlineOutlinedIcon from '@mui/icons-material/ChatBubbleOutlineOutlined'
 import LoginIcon from '@mui/icons-material/Login'
 import CreateMessage from '../components/CreateMessage.tsx'
 import MessageCard from '../components/MessageCard.tsx'
-import { glassCard, glassCardLite, glassAuthPrimary } from '../styles/glass'
+import { glassCard, glassCardLite, glassAuthPrimary, glassSectionTitle } from '../styles/glass'
 import { useAuthStore } from '../store/useAuthStore'
 import { useMessageStore } from '../store/useMessageStore'
 
@@ -26,6 +26,29 @@ const MessageSkeleton = () => (
     <Skeleton variant="text" width="30%" />
     <Skeleton variant="text" />
     <Skeleton variant="text" width="80%" />
+  </Paper>
+)
+
+const MessageEmptyState = ({ isLoggedIn }: { isLoggedIn: boolean }) => (
+  <Paper
+    sx={{
+      ...glassCardLite,
+      py: 6,
+      px: 3,
+      textAlign: 'center',
+    }}
+  >
+    <ChatBubbleOutlineOutlinedIcon
+      sx={{ fontSize: 48, color: 'primary.main', opacity: 0.6, mb: 2 }}
+    />
+    <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
+      目前還沒有任何留言
+    </Typography>
+    <Typography variant="body2" color="text.secondary">
+      {isLoggedIn
+        ? '在上方寫下第一則留言，開啟對話吧！'
+        : '登入後即可發表留言，成為第一位留言者'}
+    </Typography>
   </Paper>
 )
 
@@ -41,10 +64,12 @@ const MessageBoard = () => {
   }, [fetchMessages, messages.length])
 
   const showSkeletons = isFetching && messages.length === 0
+  const showEmptyState = !isFetching && messages.length === 0
+  const showDivider = !showEmptyState || showSkeletons
 
   return (
     <Container maxWidth="md" sx={{ mt: 4 }}>
-      <Typography variant="h4" gutterBottom sx={{ fontWeight: 700 }}>
+      <Typography variant="h4" sx={{ ...glassSectionTitle, fontSize: '2rem' }}>
         最新留言
       </Typography>
 
@@ -82,7 +107,9 @@ const MessageBoard = () => {
         </Paper>
       )}
 
-      <Divider sx={{ mb: 4, borderColor: 'rgba(255, 255, 255, 0.35)' }} />
+      {showDivider && (
+        <Divider sx={{ mb: 4, borderColor: 'rgba(255, 255, 255, 0.35)' }} />
+      )}
 
       {/* 留言列表 */}
       <Stack spacing={2} sx={{ mb: 4 }}>
@@ -96,11 +123,7 @@ const MessageBoard = () => {
         ))}
 
         {!isFetching && messages.length === 0 && (
-          <Box sx={{ py: 10, textAlign: 'center' }}>
-            <Typography color="text.secondary">
-              目前還沒有任何留言。快來搶頭香吧！
-            </Typography>
-          </Box>
+          <MessageEmptyState isLoggedIn={!!user} />
         )}
       </Stack>
     </Container>

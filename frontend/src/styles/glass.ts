@@ -6,17 +6,17 @@ export const glassCard = {
   WebkitBackdropFilter: 'blur(20px) saturate(1.4)',
   border: '1px solid rgba(255, 255, 255, 0.45)',
   boxShadow:
-    '0 8px 32px rgba(99, 102, 241, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.5)',
+    '0 8px 32px rgba(120, 96, 72, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.5)',
   borderRadius: '16px',
 }
 
-// 列表卡片用
+// 列表卡片用（無 backdrop-filter，避免多張卡片疊加 blur 造成繪製卡頓）
 export const glassCardLite = {
   backgroundColor: 'rgba(255, 255, 255, 0.38)',
   backgroundImage: 'none',
   border: '1px solid rgba(255, 255, 255, 0.45)',
   boxShadow:
-    '0 4px 16px rgba(99, 102, 241, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.5)',
+    '0 4px 16px rgba(120, 96, 72, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.5)',
   borderRadius: '16px',
 }
 
@@ -25,10 +25,10 @@ export const glassCardContent = {
   backgroundColor: 'transparent',
 }
 
-// 玻璃風捲軸（用於 multiline 輸入框等）
+// 玻璃風捲軸（用於多行輸入框等）
 export const glassScrollbar = {
   scrollbarWidth: 'thin',
-  scrollbarColor: 'rgba(99, 102, 241, 0.35) rgba(255, 255, 255, 0.12)',
+  scrollbarColor: 'rgba(143, 115, 85, 0.35) rgba(255, 255, 255, 0.12)',
   '&::-webkit-scrollbar': {
     width: '6px',
   },
@@ -37,12 +37,12 @@ export const glassScrollbar = {
     borderRadius: '4px',
   },
   '&::-webkit-scrollbar-thumb': {
-    backgroundColor: 'rgba(99, 102, 241, 0.35)',
+    backgroundColor: 'rgba(143, 115, 85, 0.35)',
     borderRadius: '4px',
     border: '1px solid rgba(255, 255, 255, 0.2)',
   },
   '&::-webkit-scrollbar-thumb:hover': {
-    backgroundColor: 'rgba(99, 102, 241, 0.55)',
+    backgroundColor: 'rgba(143, 115, 85, 0.55)',
   },
 }
 
@@ -71,7 +71,7 @@ export const glassAuthButtonBase = {
   boxShadow: 'none',
 }
 
-// Navbar / 工具列緊湊尺寸
+// 導覽列 / 工具列緊湊尺寸
 export const glassAuthCompact = {
   py: 0.75,
   px: 2,
@@ -79,7 +79,7 @@ export const glassAuthCompact = {
   fontSize: '0.875rem',
 }
 
-// 次要 outlined（登入、註冊連結、Google、返回）
+// 次要外框按鈕（登入、註冊連結、Google、返回）
 export const glassAuthOutlined = {
   ...glassAuthButtonBase,
   py: 1.2,
@@ -95,7 +95,7 @@ export const glassAuthOutlined = {
   },
 }
 
-// 主要 contained（登入、註冊提交）
+// 主要實心按鈕（登入、註冊提交）
 export const glassAuthPrimary = {
   ...glassAuthButtonBase,
   py: 1.2,
@@ -103,11 +103,11 @@ export const glassAuthPrimary = {
   backgroundColor: 'primary.main',
   '&:hover': {
     backgroundColor: 'primary.dark',
-    boxShadow: '0 4px 12px rgba(99, 102, 241, 0.35)',
+    boxShadow: '0 4px 12px rgba(143, 115, 85, 0.28)',
   },
 }
 
-// 登出 outlined
+// 登出外框按鈕
 export const glassAuthLogout = {
   ...glassAuthButtonBase,
   py: 1.2,
@@ -124,7 +124,7 @@ export const glassAuthLogout = {
 // 別名：Google、返回等次要按鈕
 export const glassOutlinedButton = glassAuthOutlined
 
-// Navbar 緊湊版
+// 導覽列緊湊版
 export const glassNavOutlined = { ...glassAuthOutlined, ...glassAuthCompact }
 export const glassNavPrimary = { ...glassAuthPrimary, ...glassAuthCompact }
 export const glassNavLogout = { ...glassAuthLogout, ...glassAuthCompact }
@@ -140,7 +140,7 @@ export const glassSectionTitle = {
   width: '100%',
 }
 
-// Navbar 用
+// 導覽列用
 export const glassNavbar = {
   backgroundColor: 'rgba(255, 255, 255, 0.35)',
   backgroundImage: 'none',
@@ -161,10 +161,10 @@ export const decorativeTextGlass = {
   WebkitTextStroke: '1px rgba(255, 255, 255, 0.28)',
   textShadow: [
     '0 1px 0 rgba(255, 255, 255, 0.35)',
-    '0 -1px 0 rgba(167, 139, 250, 0.05)',
+    '0 -1px 0 rgba(180, 150, 120, 0.06)',
     '0 0 40px rgba(255, 255, 255, 0.12)',
-    '0 8px 32px rgba(99, 102, 241, 0.08)',
-    '2px 4px 12px rgba(129, 140, 248, 0.06)',
+    '0 8px 32px rgba(143, 115, 85, 0.06)',
+    '2px 4px 12px rgba(160, 130, 100, 0.05)',
   ].join(', '),
 }
 
@@ -175,19 +175,19 @@ export const decorativeTextGlassOutline = {
   WebkitTextStroke: '1.5px rgba(255, 255, 255, 0.24)',
   textShadow: [
     '0 0 24px rgba(255, 255, 255, 0.08)',
-    '0 4px 16px rgba(99, 102, 241, 0.05)',
+    '0 4px 16px rgba(143, 115, 85, 0.04)',
   ].join(', '),
 }
 
-// 全頁背景（漸層：大色團覆蓋卡片區域）
+// 全頁背景（暖米色系）
 export const pageGradient = {
-  backgroundColor: '#ddd6fe',
+  backgroundColor: '#f5f0e9',
   backgroundImage: `
-    radial-gradient(ellipse 80% 60% at 15% 15%, rgba(167, 139, 250, 0.55), transparent),
-    radial-gradient(ellipse 70% 55% at 85% 20%, rgba(96, 165, 250, 0.5), transparent),
-    radial-gradient(ellipse 65% 50% at 50% 70%, rgba(196, 181, 253, 0.45), transparent),
-    radial-gradient(ellipse 50% 45% at 30% 55%, rgba(129, 140, 248, 0.35), transparent),
-    linear-gradient(135deg, #ddd6fe 0%, #bfdbfe 50%, #c7d2fe 100%)
+    radial-gradient(ellipse 75% 55% at 12% 18%, rgba(214, 180, 140, 0.32), transparent),
+    radial-gradient(ellipse 65% 50% at 88% 15%, rgba(175, 190, 168, 0.28), transparent),
+    radial-gradient(ellipse 60% 45% at 55% 78%, rgba(220, 195, 175, 0.25), transparent),
+    radial-gradient(ellipse 45% 40% at 28% 58%, rgba(200, 170, 145, 0.18), transparent),
+    linear-gradient(145deg, #faf6f0 0%, #f0e8de 48%, #e6dfd4 100%)
   `,
 }
 

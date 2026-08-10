@@ -82,7 +82,7 @@ const MessageCard: React.FC<IMessageProps> = ({ message }) => {
       }}
     >
       <CardContent sx={{ ...glassCardContent, p: '20px !important' }}>
-        {/* 1. 左上半邊：Avatar + 使用者名稱 */}
+        {/* 左上半邊：頭像 + 使用者名稱 */}
         <Box
           sx={{
             display: 'flex',

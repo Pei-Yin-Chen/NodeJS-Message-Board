@@ -10,7 +10,7 @@ interface IUser {
 
 interface ILoginCredentials {
   email: string
-  password?: string // 如果是 OAuth 可能不需要 password
+  password?: string // OAuth 登入可能不需要 password
 }
 
 interface IRegisterData extends ILoginCredentials {
