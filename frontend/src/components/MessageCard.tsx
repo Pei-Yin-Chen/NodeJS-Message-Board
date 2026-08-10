@@ -26,6 +26,7 @@ interface IMessageProps {
     _id: string
     content: string
     user: {
+      _id: string
       username: string
     }
     createdAt: string
@@ -46,7 +47,7 @@ const MessageCard: React.FC<IMessageProps> = ({ message }) => {
   const isOwner =
     currentUser &&
     message.user &&
-    currentUser.username === message.user.username
+    String(currentUser.id) === String(message.user._id)
 
   const formattedDate = new Date(message.updatedAt).toLocaleString('zh-TW', {
     year: 'numeric',

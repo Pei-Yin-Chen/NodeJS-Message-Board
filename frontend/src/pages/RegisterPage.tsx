@@ -52,9 +52,19 @@ const RegisterPage = () => {
       return setError('兩次密碼輸入不一致')
     }
 
+    const trimmedUsername = formData.username.trim()
+
+    if (!trimmedUsername) {
+      return setError('暱稱不能為空')
+    }
+
+    if (trimmedUsername.length < 2 || trimmedUsername.length > 20) {
+      return setError('暱稱長度需為 2～20 字')
+    }
+
     const result = await registerAction({
       email: formData.email,
-      username: formData.username,
+      username: trimmedUsername,
       password: formData.password,
     })
 
@@ -107,6 +117,7 @@ const RegisterPage = () => {
                 size="small"
                 required
                 sx={glassInput}
+                helperText="2～20 字"
               />
             </Box>
 

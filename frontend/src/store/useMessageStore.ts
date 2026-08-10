@@ -5,6 +5,7 @@ interface IMessage {
   _id: string
   content: string
   user: {
+    _id: string
     username: string
   }
   createdAt: string

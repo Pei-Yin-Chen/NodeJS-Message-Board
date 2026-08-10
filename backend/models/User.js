@@ -13,6 +13,8 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: [true, '使用者名稱是必須的'],
         trim: true,
+        minlength: [2, '使用者名稱至少需要 2 個字'],
+        maxlength: [20, '使用者名稱最多只能 20 個字'],
     },
     password: {
         type: String,

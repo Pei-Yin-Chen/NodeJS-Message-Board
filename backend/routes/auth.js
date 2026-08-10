@@ -29,6 +29,48 @@ router.get('/me', protect, async (req, res) => {
     }
 })
 
+router.patch('/profile', protect, async (req, res) => {
+    try {
+        const { username } = req.body;
+
+        if (username === undefined || username === null) {
+            return res.status(400).json({ message: '暱稱為必填' });
+        }
+
+        const trimmed = String(username).trim();
+
+        if (!trimmed) {
+            return res.status(400).json({ message: '暱稱不能為空' });
+        }
+
+        const userId = req.user.id || req.user.userId || req.user._id;
+        const user = await User.findById(userId);
+
+        if (!user) {
+            return res.status(404).json({ message: '找不到使用者' });
+        }
+
+        user.username = trimmed;
+        await user.save();
+
+        res.json({
+            user: {
+                id: user._id,
+                username: user.username,
+                email: user.email,
+                createdAt: user.createdAt
+            }
+        });
+    } catch (error) {
+        if (error.name === 'ValidationError') {
+            const message = Object.values(error.errors).map(val => val.message)[0];
+            return res.status(400).json({ message });
+        }
+
+        res.status(500).json({ message: '更新使用者資料失敗' });
+    }
+})
+
 router.post('/register', async (req, res) => {
     try {
         const { email, username, password } = req.body;

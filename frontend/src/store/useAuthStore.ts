@@ -33,6 +33,9 @@ interface IAuthState {
     credentials: ILoginCredentials,
   ) => Promise<{ success: boolean; error?: IAuthError }>
   logout: () => Promise<void>
+  updateProfile: (
+    username: string,
+  ) => Promise<{ success: boolean; error?: IAuthError }>
 }
 
 export const useAuthStore = create<IAuthState>((set) => ({
@@ -61,7 +64,9 @@ export const useAuthStore = create<IAuthState>((set) => ({
     } catch (err: any) {
       return {
         success: false,
-        error: err.response?.data?.message || '註冊失敗',
+        error: {
+          message: err.response?.data?.message || '註冊失敗',
+        },
       }
     }
   },
@@ -77,7 +82,9 @@ export const useAuthStore = create<IAuthState>((set) => ({
     } catch (err: any) {
       return {
         success: false,
-        error: err.response?.data?.message || '登入失敗，請稍後再試',
+        error: {
+          message: err.response?.data?.message || '登入失敗，請稍後再試',
+        },
       }
     }
   },
@@ -91,6 +98,21 @@ export const useAuthStore = create<IAuthState>((set) => ({
     } finally {
       set({ user: null, isInitialized: true })
       // 注意：後端清除 Cookie (Set-Cookie: token=; Max-Age=0)，前端只要清空狀態
+    }
+  },
+
+  updateProfile: async (username) => {
+    try {
+      const res = await api.patch('/auth/profile', { username })
+      set({ user: res.data.user })
+      return { success: true }
+    } catch (err: any) {
+      return {
+        success: false,
+        error: {
+          message: err.response?.data?.message || '更新失敗',
+        },
+      }
     }
   },
 }))

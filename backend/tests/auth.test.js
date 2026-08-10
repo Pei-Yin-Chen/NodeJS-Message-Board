@@ -47,6 +47,16 @@ describe('Auth API', () => {
       expect(res.status).toBe(400)
       expect(res.body.message).toBe('請輸入有效的 Email 地址')
     })
+
+    it('暱稱長度不足時回傳 400', async () => {
+      const res = await request(app).post('/api/auth/register').send({
+        ...validUser,
+        username: 'a',
+      })
+
+      expect(res.status).toBe(400)
+      expect(res.body.message).toBe('使用者名稱至少需要 2 個字')
+    })
   })
 
   describe('POST /api/auth/login', () => {
@@ -108,6 +118,59 @@ describe('Auth API', () => {
         username: validUser.username,
         email: validUser.email,
       })
+    })
+  })
+
+  describe('PATCH /api/auth/profile', () => {
+    it('未登入時回傳 401', async () => {
+      const res = await request(app)
+        .patch('/api/auth/profile')
+        .send({ username: 'newname' })
+
+      expect(res.status).toBe(401)
+      expect(res.body.message).toBe('沒有登入權限')
+    })
+
+    it('登入後可更新暱稱', async () => {
+      const agent = request.agent(app)
+      await registerAndLogin(agent, validUser)
+
+      const res = await agent
+        .patch('/api/auth/profile')
+        .send({ username: 'newnickname' })
+
+      expect(res.status).toBe(200)
+      expect(res.body.user).toMatchObject({
+        username: 'newnickname',
+        email: validUser.email,
+      })
+
+      const meRes = await agent.get('/api/auth/me')
+      expect(meRes.body.user.username).toBe('newnickname')
+    })
+
+    it('暱稱為空時回傳 400', async () => {
+      const agent = request.agent(app)
+      await registerAndLogin(agent, validUser)
+
+      const res = await agent
+        .patch('/api/auth/profile')
+        .send({ username: '   ' })
+
+      expect(res.status).toBe(400)
+      expect(res.body.message).toBe('暱稱不能為空')
+    })
+
+    it('暱稱長度不符時回傳 400', async () => {
+      const agent = request.agent(app)
+      await registerAndLogin(agent, validUser)
+
+      const res = await agent
+        .patch('/api/auth/profile')
+        .send({ username: 'a' })
+
+      expect(res.status).toBe(400)
+      expect(res.body.message).toBe('使用者名稱至少需要 2 個字')
     })
   })
 
