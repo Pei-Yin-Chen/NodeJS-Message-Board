@@ -1,11 +1,12 @@
 import React, { useState } from 'react'
-import { TextField, Button, Paper, Box, Typography } from '@mui/material'
+import { Alert, TextField, Button, Paper, Box, Typography } from '@mui/material'
 import { glassCardLite, glassInput } from '../styles/glass'
 import { useMessageStore } from '../store/useMessageStore'
 import { useAuthStore } from '../store/useAuthStore'
 
 const CreateMessage = () => {
   const [content, setContent] = useState('')
+  const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { addMessage } = useMessageStore()
   const { user } = useAuthStore()
@@ -14,6 +15,7 @@ const CreateMessage = () => {
     e.preventDefault()
     if (!content.trim() || isSubmitting) return
 
+    setError('')
     setIsSubmitting(true)
     const result = await addMessage(content)
     setIsSubmitting(false)
@@ -21,7 +23,7 @@ const CreateMessage = () => {
     if (result.success) {
       setContent('')
     } else {
-      alert(result.message || '發布失敗')
+      setError(result.message || '發布失敗')
     }
   }
 
@@ -36,13 +38,21 @@ const CreateMessage = () => {
   return (
     <Paper sx={{ ...glassCardLite, p: 2, mb: 4 }}>
       <Box component="form" onSubmit={handleSubmit}>
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
         <TextField
           fullWidth
           multiline
           rows={3}
           placeholder="想說些什麼嗎？"
           value={content}
-          onChange={(e) => setContent(e.target.value)}
+          onChange={(e) => {
+            setContent(e.target.value)
+            if (error) setError('')
+          }}
           sx={{ mb: 2, ...glassInput }}
         />
         <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>

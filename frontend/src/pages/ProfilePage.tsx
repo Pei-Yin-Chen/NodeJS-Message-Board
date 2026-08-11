@@ -7,6 +7,7 @@ import {
   Divider,
   IconButton,
   Paper,
+  Snackbar,
   Stack,
   TextField,
   Typography,
@@ -36,6 +37,7 @@ const ProfilePage = () => {
   const [isEditing, setIsEditing] = useState(false)
   const [editUsername, setEditUsername] = useState('')
   const [profileError, setProfileError] = useState<string | null>(null)
+  const [successOpen, setSuccessOpen] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
 
   if (!user) return null
@@ -47,6 +49,7 @@ const ProfilePage = () => {
   const handleStartEdit = () => {
     setEditUsername(user.username)
     setProfileError(null)
+    setSuccessOpen(false)
     setIsEditing(true)
   }
 
@@ -82,6 +85,7 @@ const ProfilePage = () => {
 
     if (result.success) {
       setIsEditing(false)
+      setSuccessOpen(true)
     } else {
       setProfileError(result.error?.message || '更新失敗')
     }
@@ -220,6 +224,22 @@ const ProfilePage = () => {
           </Button>
         </Paper>
       </Container>
+
+      <Snackbar
+        open={successOpen}
+        autoHideDuration={3000}
+        onClose={() => setSuccessOpen(false)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        sx={{ top: { xs: 72, sm: 80 } }}
+      >
+        <Alert
+          severity="success"
+          variant="filled"
+          onClose={() => setSuccessOpen(false)}
+        >
+          暱稱已更新
+        </Alert>
+      </Snackbar>
 
       <ConfirmDialog
         open={logoutOpen}

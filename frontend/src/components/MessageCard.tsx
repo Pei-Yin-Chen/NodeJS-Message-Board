@@ -1,5 +1,6 @@
 import React, { useState, memo } from 'react'
 import {
+  Alert,
   Box,
   Button,
   Card,
@@ -40,6 +41,8 @@ const MessageCard: React.FC<IMessageProps> = ({ message }) => {
 
   const [isEditing, setIsEditing] = useState(false)
   const [editContent, setEditContent] = useState(message.content)
+  const [editError, setEditError] = useState<string | null>(null)
+  const [isSaving, setIsSaving] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
 
@@ -58,9 +61,18 @@ const MessageCard: React.FC<IMessageProps> = ({ message }) => {
   })
 
   const handleUpdate = async () => {
-    if (!editContent.trim()) return
-    await updateMessage(message._id, editContent)
-    setIsEditing(false)
+    if (!editContent.trim() || isSaving) return
+
+    setEditError(null)
+    setIsSaving(true)
+    const result = await updateMessage(message._id, editContent)
+    setIsSaving(false)
+
+    if (result.success) {
+      setIsEditing(false)
+    } else {
+      setEditError(result.message || '更新失敗')
+    }
   }
 
   const handleDeleteConfirm = async () => {
@@ -109,7 +121,14 @@ const MessageCard: React.FC<IMessageProps> = ({ message }) => {
           </Box>
           {isOwner && !isEditing && (
             <Box>
-              <IconButton size="small" onClick={() => setIsEditing(true)}>
+              <IconButton
+                size="small"
+                onClick={() => {
+                  setEditContent(message.content)
+                  setEditError(null)
+                  setIsEditing(true)
+                }}
+              >
                 <EditIcon fontSize="small" />
               </IconButton>
               <IconButton size="small" color="error" onClick={() => setDeleteOpen(true)}>
@@ -128,23 +147,37 @@ const MessageCard: React.FC<IMessageProps> = ({ message }) => {
                 multiline
                 rows={2}
                 value={editContent}
-                onChange={(e) => setEditContent(e.target.value)}
+                onChange={(e) => {
+                  setEditContent(e.target.value)
+                  if (editError) setEditError(null)
+                }}
                 autoFocus
                 size="small"
+                disabled={isSaving}
                 sx={glassInput}
               />
+              {editError && (
+                <Alert severity="error">{editError}</Alert>
+              )}
               <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
                 <Button
                   size="small"
                   onClick={() => {
                     setIsEditing(false)
                     setEditContent(message.content)
+                    setEditError(null)
                   }}
+                  disabled={isSaving}
                 >
                   取消
                 </Button>
-                <Button size="small" variant="contained" onClick={handleUpdate}>
-                  儲存
+                <Button
+                  size="small"
+                  variant="contained"
+                  onClick={handleUpdate}
+                  disabled={isSaving || !editContent.trim()}
+                >
+                  {isSaving ? '儲存中…' : '儲存'}
                 </Button>
               </Box>
             </Stack>
