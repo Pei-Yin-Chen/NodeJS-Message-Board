@@ -1,15 +1,62 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const router = express.Router();
 const auth = require('../middleware/auth');
 const Message = require('../models/Message');
 
 router.get('/', async (req, res) => {
     try {
-        const messages = await Message.find()
-            .populate('user', ['username'])
-            .sort({ createdAt: -1 });
+        const { cursor } = req.query;
+        let limit = parseInt(req.query.limit, 10);
 
-        res.json(messages);
+        if (Number.isNaN(limit)) {
+            limit = 10;
+        }
+
+        if (limit < 1 || limit > 50) {
+            return res.status(400).json({ message: '留言數量必須在 1 到 50 之間' });
+        }
+
+        let filter = {};
+
+        if (cursor) {
+            if (!mongoose.Types.ObjectId.isValid(cursor)) {
+                return res.status(400).json({ message: '無效的 cursor' });
+            }
+
+            const cursorMsg = await Message.findById(cursor);
+
+            if (!cursorMsg) {
+                return res.status(404).json({ message: '找不到對應的留言' });
+            }
+
+            filter = {
+                $or: [
+                    { createdAt: { $lt: cursorMsg.createdAt } },
+                    {
+                        createdAt: cursorMsg.createdAt,
+                        _id: { $lt: cursorMsg._id }
+                    }
+                ]
+            };
+        }
+
+        const messages = await Message.find(filter)
+            .populate('user', ['username'])
+            .sort({ createdAt: -1, _id: -1 })
+            .limit(limit + 1);
+
+        const hasMore = messages.length > limit;
+        const pageMessages = hasMore ? messages.slice(0, limit) : messages;
+        const nextCursor = hasMore
+            ? pageMessages[pageMessages.length - 1]._id.toString()
+            : null;
+
+        res.json({
+            messages: pageMessages,
+            nextCursor,
+            hasMore,
+        });
     } catch (err) {
         res.status(500).json({ message: '取得資料失敗' });
     }

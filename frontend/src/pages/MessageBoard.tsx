@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import {
   Alert,
+  Box,
   Button,
   Container,
   Typography,
@@ -14,7 +15,7 @@ import ChatBubbleOutlineOutlinedIcon from '@mui/icons-material/ChatBubbleOutline
 import LoginIcon from '@mui/icons-material/Login'
 import CreateMessage from '../components/CreateMessage.tsx'
 import MessageCard from '../components/MessageCard.tsx'
-import { glassCard, glassCardLite, glassAuthPrimary, glassSectionTitle } from '../styles/glass'
+import { glassCard, glassCardLite, glassAuthPrimary, glassAuthOutlined, glassSectionTitle } from '../styles/glass'
 import { useAuthStore } from '../store/useAuthStore'
 import { useMessageStore } from '../store/useMessageStore'
 
@@ -53,7 +54,17 @@ const MessageEmptyState = ({ isLoggedIn }: { isLoggedIn: boolean }) => (
 )
 
 const MessageBoard = () => {
-  const { messages, isFetching, error, fetchMessages } = useMessageStore()
+  const {
+    messages,
+    isFetching,
+    isLoadingMore,
+    newMessagesAvailable,
+    hasMore,
+    error,
+    checkForNewMessages,
+    fetchMessages,
+    loadMoreMessages,
+  } = useMessageStore()
   const { user } = useAuthStore()
   const navigate = useNavigate()
 
@@ -62,6 +73,10 @@ const MessageBoard = () => {
       fetchMessages()
     }
   }, [fetchMessages, messages.length])
+
+  useEffect(() => {
+    checkForNewMessages()
+  }, [checkForNewMessages])
 
   const showSkeletons = isFetching && messages.length === 0
   const showEmptyState = !isFetching && messages.length === 0
@@ -77,6 +92,25 @@ const MessageBoard = () => {
         <Alert severity="error" sx={{ mb: 2 }}>
           {error}
         </Alert>
+      )}
+
+      {newMessagesAvailable && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+          <Button
+            variant="contained"
+            size="small"
+            onClick={() => fetchMessages()}
+            disabled={isFetching}
+            sx={{
+              ...glassAuthPrimary,
+              borderRadius: '999px',
+              px: 3,
+              boxShadow: 2,
+            }}
+          >
+            {isFetching ? '刷新中…' : '↑ 有新留言，點此刷新'}
+          </Button>
+        </Box>
       )}
 
       {/* 留言發布區 */}
@@ -121,6 +155,29 @@ const MessageBoard = () => {
         {messages.map((msg) => (
           <MessageCard key={msg._id} message={msg} />
         ))}
+
+        {hasMore && messages.length > 0 && (
+          <Box sx={{ display: 'flex', justifyContent: 'center', pt: 1 }}>
+            <Button
+              variant="outlined"
+              onClick={loadMoreMessages}
+              disabled={isLoadingMore}
+              sx={glassAuthOutlined}
+            >
+              {isLoadingMore ? '載入中…' : '載入更多'}
+            </Button>
+          </Box>
+        )}
+
+        {!hasMore && messages.length > 0 && (
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{ textAlign: 'center', py: 2 }}
+          >
+            已顯示全部留言
+          </Typography>
+        )}
 
         {!isFetching && messages.length === 0 && (
           <MessageEmptyState isLoggedIn={!!user} />

@@ -28,6 +28,30 @@ async function seedMessages() {
   return { user, older, newer }
 }
 
+async function seedManyMessages(count) {
+  const user = await User.create({
+    email: 'many@test.com',
+    username: 'many',
+    password: 'hashed-password',
+  })
+
+  const messages = []
+  for (let i = count; i >= 1; i -= 1) {
+    messages.push(
+      await Message.create({
+        user: user._id,
+        content: `留言 ${i}`,
+        createdAt: new Date(`2025-01-${String(i).padStart(2, '0')}`),
+        updatedAt: new Date(`2025-01-${String(i).padStart(2, '0')}`),
+      }),
+    )
+  }
+
+  return messages.sort(
+    (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+  )
+}
+
 async function createMessageForUser(overrides = {}) {
   const agent = request.agent(app)
   await registerAndLogin(agent, overrides)
@@ -45,8 +69,11 @@ describe('Messages API', () => {
       const res = await request(app).get('/api/messages')
 
       expect(res.status).toBe(200)
-      expect(Array.isArray(res.body)).toBe(true)
-      expect(res.body).toEqual([])
+      expect(res.body).toMatchObject({
+        messages: [],
+        hasMore: false,
+        nextCursor: null,
+      })
     })
 
     it('有留言時回傳資料並 populate 使用者名稱', async () => {
@@ -55,8 +82,8 @@ describe('Messages API', () => {
       const res = await request(app).get('/api/messages')
 
       expect(res.status).toBe(200)
-      expect(res.body).toHaveLength(2)
-      expect(res.body[0]).toMatchObject({
+      expect(res.body.messages).toHaveLength(2)
+      expect(res.body.messages[0]).toMatchObject({
         content: expect.any(String),
         user: { username: 'alice' },
       })
@@ -68,8 +95,45 @@ describe('Messages API', () => {
       const res = await request(app).get('/api/messages')
 
       expect(res.status).toBe(200)
-      expect(res.body[0]._id).toBe(newer._id.toString())
-      expect(res.body[1]._id).toBe(older._id.toString())
+      expect(res.body.messages[0]._id).toBe(newer._id.toString())
+      expect(res.body.messages[1]._id).toBe(older._id.toString())
+    })
+
+    it('limit=2 時回傳 hasMore 與 nextCursor', async () => {
+      await seedManyMessages(3)
+
+      const res = await request(app).get('/api/messages?limit=2')
+
+      expect(res.status).toBe(200)
+      expect(res.body.messages).toHaveLength(2)
+      expect(res.body.hasMore).toBe(true)
+      expect(res.body.nextCursor).toBeTruthy()
+    })
+
+    it('帶 cursor 可取得下一頁', async () => {
+      const sorted = await seedManyMessages(3)
+
+      const page1 = await request(app).get('/api/messages?limit=2')
+      const page2 = await request(app).get(
+        `/api/messages?limit=2&cursor=${page1.body.nextCursor}`,
+      )
+
+      expect(page2.status).toBe(200)
+      expect(page2.body.messages).toHaveLength(1)
+      expect(page2.body.messages[0]._id).toBe(sorted[2]._id.toString())
+      expect(page2.body.hasMore).toBe(false)
+    })
+
+    it('limit 無效時回傳 400', async () => {
+      const res = await request(app).get('/api/messages?limit=999')
+
+      expect(res.status).toBe(400)
+    })
+
+    it('cursor 格式無效時回傳 400', async () => {
+      const res = await request(app).get('/api/messages?cursor=abc')
+
+      expect(res.status).toBe(400)
     })
   })
 
@@ -117,8 +181,8 @@ describe('Messages API', () => {
       const res = await request(app).get('/api/messages')
 
       expect(res.status).toBe(200)
-      expect(res.body).toHaveLength(1)
-      expect(res.body[0]).toMatchObject({
+      expect(res.body.messages).toHaveLength(1)
+      expect(res.body.messages[0]).toMatchObject({
         content: '剛發的留言',
         user: { username: 'carol' },
       })
@@ -256,7 +320,9 @@ describe('Messages API', () => {
       const res = await request(app).get('/api/messages')
 
       expect(res.status).toBe(200)
-      expect(res.body).toEqual([])
+      expect(res.body.messages).toEqual([])
+      expect(res.body.hasMore).toBe(false)
+      expect(res.body.nextCursor).toBe(null)
     })
   })
 })

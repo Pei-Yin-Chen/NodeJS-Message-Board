@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import api from '../api/axiosInstance'
+const PAGE_SIZE = 10
 
 interface IMessage {
   _id: string
@@ -12,10 +13,22 @@ interface IMessage {
   updatedAt: string
 }
 
+interface IMessagePageResponse {
+  messages: IMessage[]
+  nextCursor: string | null
+  hasMore: boolean
+}
+
 interface IMessageState {
   messages: IMessage[]
   isFetching: boolean
   error: string | null
+  nextCursor: string | null
+  hasMore: boolean
+  isLoadingMore: boolean
+  newMessagesAvailable: boolean
+  checkForNewMessages: () => Promise<void>
+  loadMoreMessages: () => Promise<void>
   fetchMessages: () => Promise<void>
   addMessage: (
     content: string,
@@ -31,6 +44,59 @@ export const useMessageStore = create<IMessageState>((set, get) => ({
   messages: [],
   isFetching: false,
   error: null,
+  nextCursor: null,
+  hasMore: false,
+  isLoadingMore: false,
+  newMessagesAvailable: false,
+
+  checkForNewMessages: async () => {
+    const { messages, isFetching, isLoadingMore } = get()
+
+    if (messages.length === 0) return
+    if (isFetching || isLoadingMore) return
+    try {
+      const res = await api.get<IMessagePageResponse>('/messages', {
+        params: { limit: 1 },
+      })
+
+      const serverTopId = res.data.messages[0]?._id
+      const localTopId = messages[0]?._id
+
+      set({
+        newMessagesAvailable: Boolean(serverTopId && serverTopId !== localTopId),
+      })
+    } catch {
+      set({ newMessagesAvailable: false })
+    }
+  },
+
+  loadMoreMessages: async () => {
+    const { hasMore, isLoadingMore, nextCursor, isFetching } = get()
+
+    if (!hasMore || isLoadingMore || !nextCursor || isFetching) return
+
+    set({ isLoadingMore: true, error: null })
+
+    try {
+      const res = await api.get<IMessagePageResponse>('/messages', {
+        params: { limit: PAGE_SIZE, cursor: nextCursor },
+      })
+
+      const { messages, nextCursor: newCursor, hasMore: more } = res.data
+
+      set((state) => ({
+        messages: [...state.messages, ...messages],
+        nextCursor: newCursor,
+        hasMore: more,
+        isLoadingMore: false,
+      }))
+    } catch (err: any) {
+      set({
+        error: err.response?.data?.message || '無法載入更多留言',
+        isLoadingMore: false,
+      })
+    }
+  },
 
   fetchMessages: async () => {
     if (get().isFetching) return
@@ -43,8 +109,19 @@ export const useMessageStore = create<IMessageState>((set, get) => ({
     }))
 
     try {
-      const res = await api.get('/messages')
-      set({ messages: res.data, isFetching: false })
+      const res = await api.get<IMessagePageResponse>('/messages', {
+        params: { limit: PAGE_SIZE },
+      })
+
+      const { messages, nextCursor, hasMore } = res.data
+
+      set({
+        messages,
+        nextCursor,
+        hasMore,
+        isFetching: false,
+        newMessagesAvailable: false,
+      })
     } catch (err: any) {
       set({
         error: err.response?.data?.message || '無法載入留言',
@@ -59,6 +136,7 @@ export const useMessageStore = create<IMessageState>((set, get) => ({
       const newMessage = res.data
       set((state) => ({
         messages: [newMessage, ...state.messages],
+        newMessagesAvailable: false,
       }))
       return { success: true }
     } catch (err: any) {
