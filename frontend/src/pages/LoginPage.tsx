@@ -137,6 +137,8 @@ const LoginPage = () => {
               <TextField
                 fullWidth
                 name="email"
+                type="email"
+                autoComplete="email"
                 placeholder="example@mail.com"
                 value={formData.email}
                 onChange={handleChange}
@@ -154,6 +156,7 @@ const LoginPage = () => {
                 fullWidth
                 name="password"
                 type={showPassword ? 'text' : 'password'}
+                autoComplete="current-password"
                 placeholder="請輸入密碼"
                 value={formData.password}
                 onChange={handleChange}

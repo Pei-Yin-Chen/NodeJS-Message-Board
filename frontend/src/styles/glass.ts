@@ -61,6 +61,28 @@ export const glassInput = {
     borderColor: 'primary.main',
   },
   '& textarea': glassScrollbar,
+  '& input:-webkit-autofill': {
+    WebkitBoxShadow: '0 0 0 100px rgba(255, 255, 255, 0.22) inset',
+    WebkitTextFillColor: 'inherit',
+    caretColor: 'inherit',
+    transition: 'background-color 9999s ease-out 0s',
+  },
+  '& input:-webkit-autofill:hover': {
+    WebkitBoxShadow: '0 0 0 100px rgba(255, 255, 255, 0.28) inset',
+  },
+  '& input:-webkit-autofill:focus': {
+    WebkitBoxShadow: '0 0 0 100px rgba(255, 255, 255, 0.32) inset',
+  },
+  '& input::-ms-reveal': {
+    display: 'none',
+  },
+  '& input::-ms-clear': {
+    display: 'none',
+  },
+  '& input::-webkit-credentials-auto-fill-button': {
+    visibility: 'hidden',
+    pointerEvents: 'none',
+  },
 }
 
 // 認證按鈕共用（全站統一 8px 圓角、字重、大小寫）

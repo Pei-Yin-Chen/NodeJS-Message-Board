@@ -112,6 +112,7 @@ const RegisterPage = () => {
               <TextField
                 fullWidth
                 name="username"
+                autoComplete="username"
                 value={formData.username}
                 onChange={handleChange}
                 size="small"
@@ -128,6 +129,8 @@ const RegisterPage = () => {
               <TextField
                 fullWidth
                 name="email"
+                type="email"
+                autoComplete="email"
                 placeholder="example@mail.com"
                 value={formData.email}
                 onChange={handleChange}
@@ -145,6 +148,7 @@ const RegisterPage = () => {
                 fullWidth
                 name="password"
                 type={showPassword ? 'text' : 'password'}
+                autoComplete="new-password"
                 placeholder="請設定密碼"
                 value={formData.password}
                 onChange={handleChange}
@@ -176,6 +180,7 @@ const RegisterPage = () => {
                 fullWidth
                 name="confirmPassword"
                 type={showConfirmPassword ? 'text' : 'password'}
+                autoComplete="new-password"
                 placeholder="請再次輸入密碼"
                 value={formData.confirmPassword}
                 onChange={handleChange}
