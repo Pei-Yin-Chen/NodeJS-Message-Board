@@ -178,7 +178,13 @@ router.get('/google/callback', (req, res, next) => {
             const isDenied = info?.message?.includes('access_denied') || !user;
             const errorParam = isDenied ? 'access_denied' : 'oauth_failed';
 
-            return res.redirect(`${process.env.FRONTEND_URL}/login?error=${errorParam}`);
+            const isNginx = req.headers.host === 'localhost';
+
+            const targetRedirect = isNginx
+                ? `/login?error=${errorParam}` // Nginx 大門環境（自動繼承 https 或 http）
+                : `${process.env.FRONTEND_URL}/login?error=${errorParam}`; // 舊開發直連環境
+            
+            return res.redirect(targetRedirect);
         }
 
         // 認證成功，執行登入邏輯
@@ -193,10 +199,20 @@ router.get('/google/callback', (req, res, next) => {
             });
 
             // 成功後導回前端首頁
-            return res.redirect(process.env.FRONTEND_URL);
+            const isNginx = req.headers.host === 'localhost';
+
+            const targetRedirect = isNginx
+                ? `/` // Nginx 大門環境（自動繼承 https 或 http）
+                : `${process.env.FRONTEND_URL}`; // 舊開發直連環境
+            return res.redirect(targetRedirect);
         } catch (error) {
             console.error('Token Generation Error:', error);
-            return res.redirect(`${process.env.FRONTEND_URL}/login?error=oauth_failed`);
+            const isNginx = req.headers.host === 'localhost';
+
+            const targetRedirect = isNginx
+                ? `/login?error=oauth_failed` // Nginx 大門環境（自動繼承 https 或 http）
+                : `${process.env.FRONTEND_URL}/login?error=oauth_failed`; // 舊開發直連環境
+            return res.redirect(targetRedirect);
         }
     })(req, res, next);
 });

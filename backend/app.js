@@ -9,6 +9,7 @@ require('./config/passport');
 
 // 建立 express 的實例（App 物件）
 const app = express();
+app.set('trust proxy', true);
 
 // 中間件 Middleware
 app.use(cors({
@@ -16,13 +17,13 @@ app.use(cors({
     credentials: true // 允許跨域交換 Cookie
 }));
 app.use(cookieParser());
-app.use(express.json()); // 讓你能解析 JSON 格式的 Request Body
+app.use(express.json()); // 解析 JSON 格式的 Request Body
 app.use(passport.initialize()); // 啟動 Passport
 
 const authRoutes = require('./routes/auth');
 const messageRoutes = require('./routes/message');
 
-// 路由 Route
+// 路由 Routes
 app.get('/', (req, res) => {
     res.send('Hello World');
 });

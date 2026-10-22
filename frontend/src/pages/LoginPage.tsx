@@ -21,6 +21,7 @@ import GoogleIcon from '@mui/icons-material/Google'
 import { glassCard, glassInput, glassAuthPrimary, glassAuthOutlined, glassSectionTitle } from '../styles/glass'
 import PageBackground from '../components/PageBackground'
 import { useAuthStore } from '../store/useAuthStore'
+import { getCurrentBaseURL } from '../api/axiosInstance'
 
 const ERROR_MESSAGES = {
   access_denied: '您已取消 Google 授權。',
@@ -78,7 +79,8 @@ const LoginPage = () => {
   }
 
   const handleGoogleLogin = () => {
-    window.location.href = `${import.meta.env.VITE_API_URL}/auth/google`
+    const apiBaseURL = getCurrentBaseURL();
+    window.location.href = `${apiBaseURL}/auth/google`
   }
 
   return (

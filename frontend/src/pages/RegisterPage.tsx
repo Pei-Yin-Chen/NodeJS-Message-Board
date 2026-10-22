@@ -20,6 +20,7 @@ import GoogleIcon from '@mui/icons-material/Google'
 import { glassCard, glassInput, glassAuthPrimary, glassAuthOutlined, glassSectionTitle } from '../styles/glass'
 import PageBackground from '../components/PageBackground'
 import { useAuthStore } from '../store/useAuthStore'
+import { getCurrentBaseURL } from '../api/axiosInstance'
 
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
@@ -78,7 +79,8 @@ const RegisterPage = () => {
   }
 
   const handleGoogleLogin = () => {
-    window.location.href = `${import.meta.env.VITE_API_URL}/auth/google`
+    const apiBaseURL = getCurrentBaseURL();
+    window.location.href = `${apiBaseURL}/auth/google`
   }
 
   return (
