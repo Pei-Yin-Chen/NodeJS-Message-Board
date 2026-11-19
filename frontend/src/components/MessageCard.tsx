@@ -38,7 +38,8 @@ interface IMessageProps {
 
 const MessageCard: React.FC<IMessageProps> = ({ message }) => {
   const { user: currentUser } = useAuthStore()
-  const { deleteMessage, updateMessage } = useMessageStore()
+  const deleteMessage = useMessageStore((state) => state.deleteMessage)
+  const updateMessage = useMessageStore((state) => state.updateMessage)
 
   const [isEditing, setIsEditing] = useState(false)
   const [editContent, setEditContent] = useState(message.content)
