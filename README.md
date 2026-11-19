@@ -30,7 +30,7 @@
 ## 模式 A：Docker 生產/測試指令(一鍵啟動)
 - 啟動/更新容器：
 ```
-docker compose up --build --force-recreate -d
+docker compose up --build --pull always --force-recreate -d
 ```
 (加上 `-d` 可以讓容器在背景執行，關閉終端機也不會中斷網頁運作)
 
@@ -63,7 +63,6 @@ cd frontend && npm install && npm run dev
 
 所有 API 前綴為 `/api`。登入後 JWT 會寫入 **HTTP-only Cookie**（`token`），需登入的路由請帶 `credentials: 'include'`（前端 axios 已設定）。
 
-> 之後計畫補上 Swagger / OpenAPI 互動文件；目前以本節為準。
 
 ### 身分驗證 (Auth) — `/api/auth`
 
@@ -143,26 +142,42 @@ cd frontend && npm install && npm run dev
 
 | 方法 | 路徑 | 需登入 | 說明 |
 |------|------|--------|------|
-| GET | `/` | 否 | 取得所有留言（新到舊） |
+| GET | `/` | 否 | 取得留言列表（新到舊，cursor 分頁） |
 | POST | `/` | 是 | 新增留言 |
 | PUT | `/:messageId` | 是 | 修改留言（僅限本人） |
 | DELETE | `/:messageId` | 是 | 刪除留言（僅限本人） |
 
 #### GET `/api/messages`
 
-- 成功：`200`，留言陣列。每則留言的 `user` 為 populate 後的作者資訊：
+**Query**
+
+| 參數 | 說明 |
+|------|------|
+| `limit` | 每頁筆數，1～50，預設 10 |
+| `cursor` | 上一頁回傳的 `nextCursor`（留言 `_id`），不帶則從最新開始 |
+
+- 排序：`createdAt` 與 `_id` 皆為降序（同一時間的留言以 `_id` 決定順序）
+- 成功：`200`，回傳：
 ```json
 {
-  "_id": "...",
-  "content": "留言內容",
-  "user": {
-    "_id": "...",
-    "username": "nickname"
-  },
-  "createdAt": "...",
-  "updatedAt": "..."
+  "messages": [
+    {
+      "_id": "...",
+      "content": "留言內容",
+      "user": {
+        "_id": "...",
+        "username": "nickname"
+      },
+      "createdAt": "...",
+      "updatedAt": "..."
+    }
+  ],
+  "nextCursor": "...",
+  "hasMore": true
 }
 ```
+- 最後一頁時 `hasMore` 為 `false`，`nextCursor` 為 `null`
+- 常見錯誤：`400`（`limit` 超出範圍、`cursor` 格式無效）、`404`（`cursor` 對應的留言不存在）
 
 #### POST `/api/messages`
 
@@ -173,8 +188,9 @@ cd frontend && npm install && npm run dev
 }
 ```
 
+- `content`：必須為字串，去除前後空白後 1～500 字
 - 成功：`200`，回傳新建的留言（含 populate 的 `user`）
-- 常見錯誤：`400`（內容為空）、`401`（未登入）
+- 常見錯誤：`400`（內容為空、非字串或超過 500 字）、`401`（未登入）
 
 #### PUT `/api/messages/:messageId`
 
@@ -186,12 +202,12 @@ cd frontend && npm install && npm run dev
 ```
 
 - 成功：`200`，回傳更新後的留言
-- 常見錯誤：`401`（非本人或未登入）、`404`（找不到留言）
+- 常見錯誤：`400`（內容為空、非字串或超過 500 字）、`401`（未登入）、`403`（非本人）、`404`（找不到留言）
 
 #### DELETE `/api/messages/:messageId`
 
 - 成功：`200`，`{ "message": "留言已成功刪除" }`
-- 常見錯誤：`401`（非本人或未登入）、`404`（找不到留言）
+- 常見錯誤：`401`（未登入）、`403`（非本人）、`404`（找不到留言）
 
 ---
 

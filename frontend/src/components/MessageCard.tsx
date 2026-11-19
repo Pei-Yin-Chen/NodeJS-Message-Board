@@ -21,6 +21,7 @@ import PersonIcon from '@mui/icons-material/Person'
 import { glassCardLite, glassCardContent, glassInput, glassCard, glassAuthOutlined, glassAuthLogout } from '../styles/glass'
 import { useAuthStore } from '../store/useAuthStore'
 import { useMessageStore } from '../store/useMessageStore'
+import { MESSAGE_MAX_LENGTH } from '../constants/message'
 
 interface IMessageProps {
   message: {
@@ -154,6 +155,8 @@ const MessageCard: React.FC<IMessageProps> = ({ message }) => {
                 autoFocus
                 size="small"
                 disabled={isSaving}
+                slotProps={{ htmlInput: { maxLength: MESSAGE_MAX_LENGTH } }}
+                helperText={`${editContent.length} / ${MESSAGE_MAX_LENGTH}`}
                 sx={glassInput}
               />
               {editError && (

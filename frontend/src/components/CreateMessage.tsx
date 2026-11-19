@@ -3,6 +3,7 @@ import { Alert, TextField, Button, Paper, Box, Typography } from '@mui/material'
 import { glassCardLite, glassInput } from '../styles/glass'
 import { useMessageStore } from '../store/useMessageStore'
 import { useAuthStore } from '../store/useAuthStore'
+import { MESSAGE_MAX_LENGTH } from '../constants/message'
 
 const CreateMessage = () => {
   const [content, setContent] = useState('')
@@ -53,6 +54,8 @@ const CreateMessage = () => {
             setContent(e.target.value)
             if (error) setError('')
           }}
+          slotProps={{ htmlInput: { maxLength: MESSAGE_MAX_LENGTH } }}
+          helperText={`${content.length} / ${MESSAGE_MAX_LENGTH}`}
           sx={{ mb: 2, ...glassInput }}
         />
         <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
