@@ -172,6 +172,28 @@ describe('Messages API', () => {
       expect(res.body.message).toBe('訊息內容不能為空')
     })
 
+    it('content 不是字串時回傳 400', async () => {
+      const agent = request.agent(app)
+      await registerAndLogin(agent)
+
+      const res = await agent
+        .post('/api/messages')
+        .send({ content: { $gt: '' } })
+
+      expect(res.status).toBe(400)
+    })
+
+    it('content 超過 500 字時回傳 400', async () => {
+      const agent = request.agent(app)
+      await registerAndLogin(agent)
+
+      const res = await agent
+        .post('/api/messages')
+        .send({ content: 'a'.repeat(501) })
+
+      expect(res.status).toBe(400)
+    })
+
     it('發布後 GET 列表可看到新留言', async () => {
       const agent = request.agent(app)
       await registerAndLogin(agent, { username: 'carol' })
@@ -232,7 +254,7 @@ describe('Messages API', () => {
         .put(`/api/messages/${message._id}`)
         .send({ content: '想改別人的留言' })
 
-      expect(res.status).toBe(401)
+      expect(res.status).toBe(403)
       expect(res.body.message).toBe('權限不足')
     })
 
@@ -258,6 +280,16 @@ describe('Messages API', () => {
 
       expect(res.status).toBe(400)
       expect(res.body.message).toBe('內容不能為空')
+    })
+
+    it('content 超過 500 字時回傳 400', async () => {
+      const { agent, message } = await createMessageForUser()
+
+      const res = await agent
+        .put(`/api/messages/${message._id}`)
+        .send({ content: 'a'.repeat(501) })
+
+      expect(res.status).toBe(400)
     })
   })
 
@@ -294,7 +326,7 @@ describe('Messages API', () => {
 
       const res = await otherAgent.delete(`/api/messages/${message._id}`)
 
-      expect(res.status).toBe(401)
+      expect(res.status).toBe(403)
       expect(res.body.message).toBe('權限不足，只能刪除自己的留言')
     })
 

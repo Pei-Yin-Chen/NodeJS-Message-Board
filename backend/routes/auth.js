@@ -1,16 +1,22 @@
 const express = require('express');
 const router = express.Router(); // 建立一個路由器實例
 const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
 const User = require('../models/User'); // 引入 User 模型
 const protect = require('../middleware/auth');
 const passport = require('passport');
 const generateToken = require('../utils/generateToken');
 
+// 登入與 Google 登入共用的 Cookie 設定（與 generateToken 的 1 小時效期一致）
+const cookieOptions = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 60 * 60 * 1000
+};
+
 router.get('/me', protect, async (req, res) => {
     try {
-        const userId = req.user.id || req.user.userId || req.user._id;
-        const user = await User.findById(userId).select('-password');
+        const user = await User.findById(req.userId).select('-password');
 
         if (!user) {
             return res.status(404).json({ message: '找不到使用者' })
@@ -43,8 +49,7 @@ router.patch('/profile', protect, async (req, res) => {
             return res.status(400).json({ message: '暱稱不能為空' });
         }
 
-        const userId = req.user.id || req.user.userId || req.user._id;
-        const user = await User.findById(userId);
+        const user = await User.findById(req.userId);
 
         if (!user) {
             return res.status(404).json({ message: '找不到使用者' });
@@ -129,19 +134,10 @@ router.post('/login', async (req, res) => {
             return res.status(400).json({ message: '帳號或密碼錯誤' });
         }
 
-        // 簽發 JWT Token
-        const token = jwt.sign(
-            { userId: user._id },
-            process.env.JWT_SECRET,
-            { expiresIn: '1h' }
-        );
+        // 簽發 JWT Token（payload 統一由 generateToken 產生）
+        const token = generateToken(user._id);
 
-        res.cookie('token', token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
-            maxAge: 3600000
-        });
+        res.cookie('token', token, cookieOptions);
 
         res.json({
             user: {
@@ -173,10 +169,9 @@ router.get('/google/callback', (req, res, next) => {
         if (err || !user) {
             console.log('Google Auth Failed Info:', info);
 
-            // 判斷是否為使用者拒絕授權 (access_denied)
-            // info 通常會包含 Google 回傳的原始錯誤訊息
-            const isDenied = info?.message?.includes('access_denied') || !user;
-            const errorParam = isDenied ? 'access_denied' : 'oauth_failed';
+            // 有 err 代表流程出錯 (oauth_failed)；
+            // 沒有 err 但沒有 user，代表使用者拒絕授權 (access_denied)
+            const errorParam = err ? 'oauth_failed' : 'access_denied';
 
             const isNginx = req.headers.host === 'localhost';
 
@@ -191,12 +186,7 @@ router.get('/google/callback', (req, res, next) => {
         try {
             const token = generateToken(user._id);
 
-            res.cookie('token', token, {
-                httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: 'lax',
-                maxAge: 60 * 60 * 1000
-            });
+            res.cookie('token', token, cookieOptions);
 
             // 成功後導回前端首頁
             const isNginx = req.headers.host === 'localhost';

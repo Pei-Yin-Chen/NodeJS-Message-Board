@@ -4,6 +4,32 @@ const router = express.Router();
 const auth = require('../middleware/auth');
 const Message = require('../models/Message');
 
+const MAX_CONTENT_LENGTH = 500;
+
+// 驗證留言內容：回傳錯誤訊息，通過則回傳 null
+function validateContent(content, emptyMessage) {
+    if (typeof content !== 'string' || !content.trim()) {
+        return emptyMessage;
+    }
+
+    if (content.trim().length > MAX_CONTENT_LENGTH) {
+        return `留言內容不能超過 ${MAX_CONTENT_LENGTH} 字`;
+    }
+
+    return null;
+}
+
+// 將 Mongoose ValidationError 轉成 400 回應；非驗證錯誤回傳 false
+function handleValidationError(err, res) {
+    if (err.name === 'ValidationError') {
+        const message = Object.values(err.errors).map(val => val.message)[0];
+        res.status(400).json({ message });
+        return true;
+    }
+
+    return false;
+}
+
 router.get('/', async (req, res) => {
     try {
         const { cursor } = req.query;
@@ -66,25 +92,22 @@ router.post('/', auth, async (req, res) => {
     try {
         const { content } = req.body;
 
-        if (!content) {
-            return res.status(400).json({ message: '訊息內容不能為空' });
-        }
-
-        const userId = req.user.id || req.user.userId || req.user._id;
-
-        if (!userId) {
-            return res.status(401).json({ message: '無效的使用者資訊' });
+        const contentError = validateContent(content, '訊息內容不能為空');
+        if (contentError) {
+            return res.status(400).json({ message: contentError });
         }
 
         const newMessage = new Message({
-            user: userId, // 這是從 auth middleware 存入 req 的資料
-            content
+            user: req.userId,
+            content: content.trim()
         });
 
         const message = await newMessage.save();
         const populatedMessage = await message.populate('user', 'username');
         res.json(populatedMessage);
     } catch (error) {
+        if (handleValidationError(error, res)) return;
+
         res.status(500).json({ message: '伺服器錯誤' });
     }
 });
@@ -93,52 +116,58 @@ router.put('/:messageId', auth, async (req, res) => {
     try {
         const { content } = req.body;
 
-        if (!content) {
-            return res.status(400).json({ message: '內容不能為空' });
+        const contentError = validateContent(content, '內容不能為空');
+        if (contentError) {
+            return res.status(400).json({ message: contentError });
         }
 
-        let message = await Message.findById(req.params.messageId);
+        // 將「作者」條件放進查詢，檢查與更新為單一原子操作
+        const message = await Message.findOneAndUpdate(
+            { _id: req.params.messageId, user: req.userId },
+            { $set: { content: content.trim() } },
+            { returnDocument: 'after', runValidators: true } // returnDocument: 'after' 回傳更新後的結果
+        ).populate('user', 'username');
 
         if (!message) {
-            return res.status(404).json({ message: '找不到該留言' });
-        }
+            // 查不到可能是留言不存在，或不是作者，失敗路徑才多查一次區分
+            const exists = await Message.exists({ _id: req.params.messageId });
 
-        // 權限檢查：只能修改自己的留言
-        if (message.user.toString() !== (req.user.userId || req.user.id || req.user._id)) {
-            return res.status(401).json({ message: '權限不足' });
-        }
+            if (!exists) {
+                return res.status(404).json({ message: '找不到該留言' });
+            }
 
-        // 使用 findByIdAndUpdate 可以直接回傳更新後的資料
-        message = await Message.findByIdAndUpdate(
-            req.params.messageId,
-            { $set: { content: content } },
-            { new: true } // 這個參數代表回傳「更新後」的結果，而不是舊的
-        ).populate('user', 'username');
+            return res.status(403).json({ message: '權限不足' });
+        }
 
         res.json(message);
     } catch (err) {
         if (err.kind === 'ObjectId') {
             return res.status(404).json({ message: '找不到該留言' });
         }
+
+        if (handleValidationError(err, res)) return;
+
         res.status(500).json({ message: '伺服器錯誤' });
     }
 });
 
 router.delete('/:messageId', auth, async (req, res) => {
     try {
-        const message = await Message.findById(req.params.messageId);
+        // 將「作者」條件放進查詢，檢查與刪除為單一原子操作
+        const message = await Message.findOneAndDelete({
+            _id: req.params.messageId,
+            user: req.userId
+        });
 
         if (!message) {
-            return res.status(404).json({ message: '找不到該留言' });
-        }
+            const exists = await Message.exists({ _id: req.params.messageId });
 
-        // 權限檢查：比對「留言的作者 ID」是否等於「目前登入的使用者 ID」
-        // 注意：message.user 是 ObjectId 物件，req.user.user.userId 是字串，所以要轉成字串比對
-        if (message.user.toString() !== (req.user.userId || req.user.id || req.user._id)) {
-            return res.status(401).json({ message: '權限不足，只能刪除自己的留言' });
-        }
+            if (!exists) {
+                return res.status(404).json({ message: '找不到該留言' });
+            }
 
-        await message.deleteOne();
+            return res.status(403).json({ message: '權限不足，只能刪除自己的留言' });
+        }
 
         res.json({ message: '留言已成功刪除' });
     } catch (err) {

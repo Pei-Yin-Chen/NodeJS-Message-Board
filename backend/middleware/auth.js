@@ -13,8 +13,12 @@ module.exports = function(req, res, next) {
         // 驗證 Token 並解碼
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-        // 將使用者 ID 儲存在 req.userId 中，以便在路由中使用
-        req.user = decoded;
+        // 將使用者 ID 統一存在 req.userId，路由不需要再判斷 payload 欄位
+        req.userId = decoded.id;
+
+        if (!req.userId) {
+            return res.status(401).json({ message: '無效的 Token' });
+        }
 
         next();
     } catch (error) {
